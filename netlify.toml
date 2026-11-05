@@ -1,0 +1,31 @@
+# "야구 같이 보기" — Netlify 설정
+# 정적 파일(index.html)은 루트에서 그대로 서빙하고,
+# /api/* 요청은 Netlify Functions(네이버 스포츠 프록시)로 넘긴다.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# /api/games?date=YYYYMMDD → 그날 경기 목록
+[[redirects]]
+  from = "/api/games"
+  to = "/.netlify/functions/games"
+  status = 200
+
+# /api/relay?gameId=...(&inning=N) → 문자중계
+[[redirects]]
+  from = "/api/relay"
+  to = "/.netlify/functions/relay"
+  status = 200
+
+# /api/kbo?type=games|relay → KBO 공식 (네이버 막힐 때 2순위)
+[[redirects]]
+  from = "/api/kbo"
+  to = "/.netlify/functions/kbo"
+  status = 200
+
+# /api/daum?type=games|game|relayProbe → 다음 스포츠 (3순위, 확인 단계)
+[[redirects]]
+  from = "/api/daum"
+  to = "/.netlify/functions/daum"
+  status = 200

@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>야구 같이 보기</title>
+<style>
+  /* ===================================================================
+     기본 스타일 — 다크 테마, 모바일 가로 우선
+     =================================================================== */
+  :root {
+    --bg: #0e1116;
+    --panel: #171b22;
+    --panel2: #1f2530;
+    --line: #2b3240;
+    --text: #e8ecf2;
+    --dim: #8b95a7;
+    --accent: #3fb68b;
+    --live: #ff4d4f;
+    --warn: #f0b429;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+  button, input, select {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.35; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #062417; font-weight: 700; }
+  input[type="text"], input[type="date"] {
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+
+  /* ---------- 상단 바 ---------- */
+  #topbar {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+    background: rgba(14,17,22,0.95);
+    border-bottom: 1px solid var(--line);
+  }
+  #topbar h1 { font-size: 17px; margin: 0 8px 0 0; white-space: nowrap; }
+  #topbar .spacer { flex: 1; }
+  #topbar label { display: flex; align-items: center; gap: 4px; color: var(--dim); white-space: nowrap; }
+
+  /* ---------- 경기 카드 목록 ---------- */
+  #status-line { padding: 8px 14px; color: var(--dim); min-height: 20px; }
+  #status-line.error { color: var(--live); white-space: pre-wrap; }
+  #game-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    padding: 0 12px 16px;
+  }
+  .game-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .game-card .meta { display: flex; justify-content: space-between; color: var(--dim); font-size: 12px; }
+  .game-card .state { font-weight: 700; }
+  .game-card .state.live { color: var(--live); }
+  .game-card .state.final { color: var(--dim); }
+  .game-card .state.scheduled { color: var(--accent); }
+  .game-card .state.unknown { color: var(--warn); }
+  .team-row { display: flex; align-items: center; gap: 8px; }
+  .team-chip { width: 6px; height: 26px; border-radius: 3px; flex: none; }
+  .team-name { flex: 1; font-size: 16px; font-weight: 700; }
+  .team-score { font-size: 20px; font-weight: 800; min-width: 28px; text-align: right; }
+  .home-tag { font-size: 10px; color: var(--dim); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+  .game-card .buttons { display: flex; gap: 6px; }
+  .game-card .buttons button { flex: 1; white-space: nowrap; padding: 8px 4px; }
+  .missing-note { font-size: 11px; color: var(--warn); word-break: break-all; }
+
+  /* ---------- 디버그 / 직접 입력 박스 ---------- */
+  #manual-box {
+    margin: 0 12px 16px;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    color: var(--dim);
+  }
+
+  /* ---------- 문자중계 구조 확인(인스펙터) ---------- */
+  #inspector {
+    position: fixed; inset: 0; z-index: 20;
+    background: var(--bg);
+    display: none; flex-direction: column;
+  }
+  #inspector.open { display: flex; }
+  #insp-head {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+    border-bottom: 1px solid var(--line);
+  }
+  #insp-title { font-weight: 700; margin-right: auto; }
+  #insp-tabs { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  #insp-tabs button.active { background: var(--accent); color: #062417; border-color: var(--accent); }
+  #insp-body {
+    flex: 1; overflow: auto;
+    padding: 10px max(12px, env(safe-area-inset-right)) 30px max(12px, env(safe-area-inset-left));
+  }
+  #insp-body h3 { margin: 16px 0 6px; font-size: 14px; color: var(--accent); }
+  #insp-body .note { color: var(--dim); font-size: 12px; margin: 4px 0; }
+  table.grid { border-collapse: collapse; width: 100%; font-size: 12px; }
+  table.grid th, table.grid td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  table.grid th { background: var(--panel2); position: sticky; top: 0; }
+  table.grid td.mono, .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  table.grid tr.inning-start td { border-top: 2px solid var(--accent); }
+  pre.json {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 11px;
+    overflow: auto;
+    max-height: 70vh;
+    white-space: pre;
+  }
+  #probe-panel { margin: 10px 12px 0; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
+  #probe-panel .probe-head { display: flex; gap: 10px; align-items: baseline; margin-bottom: 6px; flex-wrap: wrap; }
+  #probe-panel .note { color: var(--dim); font-size: 12px; }
+  .pill { display: inline-block; padding: 0 6px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); font-size: 11px; }
+  .ok { color: var(--accent); }
+  .bad { color: var(--live); }
+</style>
+</head>
+<body>
+
+<!-- =================================================================
+     상단 바: 날짜 선택 + 디버그 토글
+     ================================================================= -->
+<div id="topbar">
+  <h1>⚾ 야구 같이 보기</h1>
+  <button id="btn-prev-day">◀</button>
+  <input type="date" id="date-input">
+  <button id="btn-next-day">▶</button>
+  <button id="btn-today">오늘</button>
+  <button id="btn-load" class="primary">불러오기</button>
+  <span class="spacer"></span>
+  <button id="btn-probe">소스 점검</button>
+  <label><input type="checkbox" id="debug-toggle" checked> 디버그 모드</label>
+</div>
+
+<!-- 데이터 소스 점검 결과 (네이버 / KBO 공식 / 다음) -->
+<div id="probe-panel" style="display:none">
+  <div class="probe-head">
+    <b>데이터 소스 점검</b>
+    <span class="note" id="probe-note"></span>
+  </div>
+  <table class="grid" id="probe-table">
+    <tr><th>소스</th><th>항목</th><th>결과</th><th>시간</th><th>내용</th><th></th></tr>
+  </table>
+</div>
+
+<div id="status-line"></div>
+<div id="game-list"></div>
+
+<!-- 경기 ID 직접 입력 / 저장된 JSON 열기 (시즌이 끝났거나 경기가 없는 날 테스트용) -->
+<div id="manual-box">
+  <span>경기 ID 직접 입력</span>
+  <input type="text" id="manual-game-id" placeholder="예: 20260920HHLG02026" size="20">
+  <button id="btn-manual-open">문자중계 구조 보기</button>
+  <span style="font-size:11px">네이버 ID 형식 — 정규시즌: 날짜+원정+홈+0+연도 / 포스트시즌: 앞 4자리가 시리즈 번호 반복(한국시리즈 7777MMDD…+연도)</span>
+  <span style="flex-basis:100%;height:0"></span>
+  <span>저장해 둔 relay JSON 열기</span>
+  <input type="file" id="json-file-input" accept=".json,application/json">
+</div>
+
+<!-- =================================================================
+     문자중계 구조 확인 화면 (1단계 전용 — 3D 화면은 2단계부터)
+     ================================================================= -->
+<div id="inspector">
+  <div id="insp-head">
+    <span id="insp-title">문자중계</span>
+    <button id="btn-insp-reload">다시 받기</button>
+    <button id="btn-insp-console">콘솔에 다시 출력</button>
+    <button id="btn-insp-download">원본 JSON 저장</button>
+    <button id="btn-insp-close">닫기</button>
+  </div>
+  <div id="insp-tabs">
+    <button data-tab="summary" class="active">요약</button>
+    <button data-tab="events">이벤트 순서</button>
+    <button data-tab="schema">필드 구조</button>
+    <button data-tab="lineup">라인업</button>
+    <button data-tab="raw">원본</button>
+  </div>
+  <div id="insp-body"></div>
+</div>
+
+<script>
+// =====================================================================
+// 1단계: 경기 목록 + 문자중계(relay) 응답 구조 확인
+//
+// 이 단계의 목적은 "네이버가 실제로 어떤 필드를 주는지" 눈으로 확인하는 것.
+// 필드명을 추측해서 3D 로직을 짜기 전에, 여기서 본 구조를 기준으로 2~5단계를 짠다.
+//
+// 콘솔에서 쓸 수 있는 전역 변수:
+//   window.__games   — 마지막으로 받은 경기 목록 응답
+//   window.__relay   — 마지막으로 받은 문자중계 응답 원본
+//   window.__events  — seqno 순으로 펼친 문자중계 텍스트 목록
+// =====================================================================
+
+const state = {
+  debug: true,
+  currentGameId: null,
+  relayData: null, // /api/relay 응답 원본
+  analysis: null, // analyzeRelay() 결과
+  currentTab: "summary",
+  autoRefreshTimer: null,
+};
+
+// ---------------------------------------------------------------------
+// 팀 정보 (코드 → 이름, 팀 컬러)
+// 코드는 네이버 gameId 안에 들어 있는 2글자 코드 기준.
+// 예: 20260920HHLG02026 → 원정 HH(한화), 홈 LG
+// ---------------------------------------------------------------------
+function getTeamInfo(code, fallbackName) {
+  switch (code) {
+    case "LG": // LG 트윈스 — 잠실
+      return { name: "LG", color: "#C30452" };
+    case "OB": // 두산 베어스 — 잠실
+      return { name: "두산", color: "#1A1748" };
+    case "SK": // SSG 랜더스 — 인천 (SK 시절 코드 그대로 씀)
+      return { name: "SSG", color: "#CE0E2D" };
+    case "KT": // KT 위즈 — 수원
+      return { name: "KT", color: "#E4002B" };
+    case "HH": // 한화 이글스 — 대전
+      return { name: "한화", color: "#FF6600" };
+    case "SS": // 삼성 라이온즈 — 대구
+      return { name: "삼성", color: "#074CA1" };
+    case "LT": // 롯데 자이언츠 — 부산 사직
+      return { name: "롯데", color: "#D00F31" };
+    case "NC": // NC 다이노스 — 창원
+      return { name: "NC", color: "#315288" };
+    case "HT": // KIA 타이거즈 — 광주 (해태 시절 코드)
+      return { name: "KIA", color: "#EA0029" };
+    case "WO": // 키움 히어로즈 — 고척
+      return { name: "키움", color: "#820024" };
+    default:
+      // 모르는 코드: 네이버가 준 이름을 쓰고 회색으로
+      return { name: fallbackName || code || "?", color: "#666666" };
+  }
+}
+
+// 앱 상태 → 한글 라벨
+function getStateLabel(gameState) {
+  switch (gameState) {
+    case "scheduled":
+      return "예정";
+    case "live":
+      return "진행 중";
+    case "final":
+      return "종료";
+    case "cancelled":
+      return "취소";
+    default:
+      return "상태 모름";
+  }
+}
+
+// ---------------------------------------------------------------------
+// 문자중계 textOptions.type 번호 → 이름
+// 외부 실측(2026-09) 기준. 여기 없는 번호가 나오면 "미확인"으로 표시되니
+// 디버그 화면에서 예시 텍스트를 보고 추가할 것.
+// ---------------------------------------------------------------------
+function getTextTypeName(type) {
+  switch (Number(type)) {
+    case 0:
+      return "이닝 시작";
+    case 1:
+      return "투구";
+    case 2:
+      return "선수 교체";
+    case 7:
+      return "기타 안내";
+    case 8:
+      return "타자 등장";
+    case 13:
+      return "타격 결과";
+    case 23:
+      return "타격 결과(득점)";
+    case 14:
+      return "주자 플레이";
+    case 24:
+      return "주자 플레이(득점)";
+    case 99:
+      return "경기 종료";
+    default:
+      return "미확인(" + type + ")";
+  }
+}
+
+// 투구 결과 코드(pitchResult) → 이름. 외부 실측 기준.
+function getPitchResultName(code) {
+  switch (code) {
+    case "B":
+      return "볼";
+    case "T":
+      return "루킹 스트라이크";
+    case "S":
+      return "헛스윙";
+    case "F":
+      return "파울";
+    case "W":
+      return "번트 파울";
+    case "H":
+      return "타격";
+    case undefined:
+    case null:
+    case "":
+      return "";
+    default:
+      return "미확인(" + code + ")";
+  }
+}
+
+// =====================================================================
+// 날짜 유틸
+// =====================================================================
+function todayInKoreaISO() {
+  // 한국 시간 기준 오늘 (YYYY-MM-DD)
+  const koreaNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return koreaNow.toISOString().slice(0, 10);
+}
+
+function shiftDateISO(iso, days) {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function isoToYmd(iso) {
+  return iso.replace(/-/g, "");
+}
+
+// =====================================================================
+// 공통 유틸
+// =====================================================================
+function escapeHtml(value) {
+  return String(value === undefined || value === null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function setStatus(message, isError) {
+  const el = document.getElementById("status-line");
+  el.textContent = message;
+  el.className = isError ? "error" : "";
+}
+
+// /api 호출. 실패해도 서버가 준 JSON(에러 내용)을 최대한 보여준다.
+async function fetchApi(path) {
+  let res;
+  try {
+    res = await fetch(path, { cache: "no-store" });
+  } catch (e) {
+    throw new Error(
+      "API 요청 자체가 실패함: " + e.message +
+      "\n(index.html을 파일로 직접 열면 /api가 없음 → Netlify에 배포하거나 `netlify dev`로 실행)"
+    );
+  }
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("API 응답이 JSON이 아님 (HTTP " + res.status + "): " + text.slice(0, 200));
+  }
+  if (!res.ok || data.ok === false) {
+    throw new Error("API 오류 (HTTP " + res.status + ")\n" + JSON.stringify(data, null, 2).slice(0, 800));
+  }
+  return data;
+}
+
+// =====================================================================
+// 경기 목록
+// =====================================================================
+async function loadGames() {
+  const iso = document.getElementById("date-input").value || todayInKoreaISO();
+  const ymd = isoToYmd(iso);
+
+  setStatus(iso + " 경기 목록 불러오는 중…");
+  document.getElementById("game-list").innerHTML = "";
+
+  let data;
+  try {
+    const debugParam = state.debug ? "&debug=1" : "";
+    data = await fetchApi("/api/games?date=" + ymd + debugParam);
+  } catch (e) {
+    setStatus(e.message, true);
+    console.error("[games] 실패", e);
+    return;
+  }
+
+  window.__games = data;
+
+  if (state.debug) {
+    console.groupCollapsed("[games] " + ymd + " — " + data.count + "경기");
+    console.log("요청 주소:", data.source);
+    console.log("정리된 목록:", data.games);
+    console.log("네이버 원본:", data.raw);
+    if (data.raw && data.raw.result && Array.isArray(data.raw.result.games) && data.raw.result.games[0]) {
+      console.log("원본 경기 1개의 필드 목록:", Object.keys(data.raw.result.games[0]));
+    }
+    console.table(
+      data.games.map(function (g) {
+        return {
+          gameId: g.gameId,
+          원정: g.awayName,
+          홈: g.homeName,
+          점수: g.awayScore + ":" + g.homeScore,
+          statusCode: g.statusCode,
+          statusInfo: g.statusInfo,
+          구장: g.stadium,
+          없는필드: g._missing.join(","),
+        };
+      })
+    );
+    console.groupEnd();
+  }
+
+  if (data.count === 0) {
+    setStatus(iso + " — 경기 없음. 다른 날짜를 고르거나, 아래에 경기 ID를 직접 넣어서 테스트할 수 있음.");
+    scheduleAutoRefresh([]);
+    return;
+  }
+
+  setStatus(iso + " — " + data.count + "경기");
+  renderGameList(data.games);
+  scheduleAutoRefresh(data.games);
+}
+
+function renderGameList(games) {
+  const list = document.getElementById("game-list");
+  list.innerHTML = "";
+
+  for (const g of games) {
+    list.appendChild(createGameCard(g));
+  }
+}
+
+function createGameCard(g) {
+  const away = getTeamInfo(g.awayCode, g.awayName);
+  const home = getTeamInfo(g.homeCode, g.homeName);
+
+  // 시작 시간: gameDateTime 예 "2026-09-20T14:00:00" (추정) → "14:00"
+  let timeText = "";
+  if (g.dateTime && String(g.dateTime).length >= 16) {
+    timeText = String(g.dateTime).slice(11, 16);
+  }
+
+  // 상태 옆에 이닝 정보 (진행 중일 때만 의미 있음)
+  let stateText = getStateLabel(g.state);
+  if (g.state === "live" && g.statusInfo) {
+    stateText += " · " + g.statusInfo;
+  }
+
+  const showScore = g.state === "live" || g.state === "final";
+
+  const card = document.createElement("div");
+  card.className = "game-card";
+  card.innerHTML =
+    '<div class="meta">' +
+      '<span class="state ' + escapeHtml(g.state) + '">' + escapeHtml(stateText) + "</span>" +
+      "<span>" + escapeHtml(g.stadium || "구장?") + (timeText ? " · " + escapeHtml(timeText) : "") + "</span>" +
+    "</div>" +
+    '<div class="team-row">' +
+      '<span class="team-chip" style="background:' + away.color + '"></span>' +
+      '<span class="team-name">' + escapeHtml(away.name) + "</span>" +
+      '<span class="team-score">' + (showScore ? escapeHtml(g.awayScore) : "") + "</span>" +
+    "</div>" +
+    '<div class="team-row">' +
+      '<span class="team-chip" style="background:' + home.color + '"></span>' +
+      '<span class="team-name">' + escapeHtml(home.name) + '<span class="home-tag">홈</span></span>' +
+      '<span class="team-score">' + (showScore ? escapeHtml(g.homeScore) : "") + "</span>" +
+    "</div>" +
+    '<div class="buttons">' +
+      '<button class="btn-enter primary">입장</button>' +
+      '<button class="btn-replay">다시보기</button>' +
+      (state.debug ? '<button class="btn-inspect">구조 보기</button>' : "") +
+    "</div>" +
+    (state.debug && g._missing.length > 0
+      ? '<div class="missing-note">응답에 없던 필드: ' + escapeHtml(g._missing.join(", ")) + "</div>"
+      : "") +
+    (state.debug ? '<div class="missing-note" style="color:var(--dim)">' + escapeHtml(g.gameId) + " · statusCode=" + escapeHtml(g.statusCode) + "</div>" : "");
+
+  // 입장: 진행 중일 때만 / 다시보기: 종료됐을 때만
+  const enterBtn = card.querySelector(".btn-enter");
+  const replayBtn = card.querySelector(".btn-replay");
+  enterBtn.disabled = g.state !== "live";
+  replayBtn.disabled = g.state !== "final";
+
+  // 1단계에서는 둘 다 문자중계 구조 화면을 연다 (3D 화면은 2단계부터)
+  enterBtn.addEventListener("click", function () {
+    openInspector(g.gameId, "실시간 입장");
+  });
+  replayBtn.addEventListener("click", function () {
+    openInspector(g.gameId, "다시보기");
+  });
+  const inspectBtn = card.querySelector(".btn-inspect");
+  if (inspectBtn) {
+    inspectBtn.addEventListener("click", function () {
+      openInspector(g.gameId, "구조 보기");
+    });
+  }
+
+  return card;
+}
+
+// 오늘 날짜에 진행 중 경기가 있으면 30초마다 목록 새로고침
+function scheduleAutoRefresh(games) {
+  if (state.autoRefreshTimer) {
+    clearTimeout(state.autoRefreshTimer);
+    state.autoRefreshTimer = null;
+  }
+  const isToday = document.getElementById("date-input").value === todayInKoreaISO();
+  let hasLive = false;
+  for (const g of games) {
+    if (g.state === "live") hasLive = true;
+  }
+  if (isToday && hasLive) {
+    state.autoRefreshTimer = setTimeout(function () {
+      // 인스펙터가 열려 있으면 목록 새로고침은 쉰다
+      if (!document.getElementById("inspector").classList.contains("open")) {
+        loadGames();
+      } else {
+        scheduleAutoRefresh(games);
+      }
+    }, 30000);
+  }
+}
+
+// =====================================================================
+// 문자중계 구조 확인 (인스펙터)
+// =====================================================================
+async function openInspector(gameId, reason) {
+  state.currentGameId = gameId;
+  document.getElementById("inspector").classList.add("open");
+  document.getElementById("insp-title").textContent = gameId + " — " + reason + " (1단계: 데이터 확인)";
+  document.getElementById("insp-body").innerHTML = '<p class="note">문자중계 전체 이닝 받는 중… (이닝마다 요청해서 몇 초 걸림)</p>';
+
+  let data;
+  try {
+    data = await fetchApi("/api/relay?gameId=" + encodeURIComponent(gameId));
+  } catch (e) {
+    document.getElementById("insp-body").innerHTML = '<pre class="json bad">' + escapeHtml(e.message) + "</pre>";
+    console.error("[relay] 실패", e);
+    return;
+  }
+
+  showRelayData(data);
+}
+
+// 받은(또는 파일에서 연) relay 데이터를 분석하고 화면/콘솔에 출력
+function showRelayData(data) {
+  state.relayData = data;
+  state.analysis = analyzeRelay(data);
+  window.__relay = data;
+  window.__events = state.analysis.events;
+
+  if (state.debug) {
+    printRelayToConsole(data, state.analysis);
+  }
+  renderInspectorTab();
+}
+
+// ---------------------------------------------------------------------
+// relay 응답 분석
+//  - 이닝별 textRelays(최신 타석이 앞) 안의 textOptions를 전부 꺼내서
+//    seqno 기준으로 중복 제거 + 오름차순 정렬 → 실제 일어난 순서
+//  - 타입별 개수/예시, 필드 구조, 라인업 키 등을 모은다
+// ---------------------------------------------------------------------
+function analyzeRelay(data) {
+  const events = [];
+  const seenSeqno = {}; // seqno → true (중복 확인용)
+  let duplicateCount = 0;
+  let noSeqnoCount = 0;
+
+  const typeStats = {}; // type → { count, samples: [] }
+  const ptsLocations = {}; // "pts"가 들어간 필드가 어디에 있는지
+
+  // 전체 이닝 응답(mode=all)이면 innings, 한 이닝 응답(mode=inning)이면 result 하나를 감싼다
+  let innings = [];
+  if (Array.isArray(data.innings)) {
+    innings = data.innings;
+  } else if (data.mode === "inning" && data.result) {
+    innings = [{ inning: data.inning, result: data.result }];
+  }
+
+  for (const inningBlock of innings) {
+    const trd = inningBlock.result ? inningBlock.result.textRelayData : null;
+    if (!trd || !Array.isArray(trd.textRelays)) {
+      continue;
+    }
+
+    for (const relay of trd.textRelays) {
+      // homeOrAway: "0" = 원정 공격(초), "1" = 홈 공격(말) — 외부 실측 기준
+      let half = "?";
+      if (String(relay.homeOrAway) === "0") half = "초";
+      if (String(relay.homeOrAway) === "1") half = "말";
+
+      // 타석 단위 객체에 pts 관련 키가 있는지
+      for (const key of Object.keys(relay)) {
+        if (key.toLowerCase().indexOf("pts") !== -1) {
+          ptsLocations["textRelays[]." + key] = true;
+        }
+      }
+
+      const options = Array.isArray(relay.textOptions) ? relay.textOptions : [];
+      for (const opt of options) {
+        // 투구 단위 객체에 pts 관련 키가 있는지
+        for (const key of Object.keys(opt)) {
+          if (key.toLowerCase().indexOf("pts") !== -1) {
+            ptsLocations["textRelays[].textOptions[]." + key] = true;
+          }
+        }
+
+        if (opt.seqno === undefined || opt.seqno === null) {
+          noSeqnoCount++;
+          continue;
+        }
+        if (seenSeqno[opt.seqno]) {
+          duplicateCount++;
+          continue;
+        }
+        seenSeqno[opt.seqno] = true;
+
+        events.push({
+          seqno: Number(opt.seqno),
+          inning: Number(relay.inn),
+          half: half,
+          paNo: relay.no, // 타석 번호
+          paTitle: relay.title,
+          type: opt.type,
+          text: opt.text,
+          raw: opt, // 원본 그대로
+        });
+
+        // 타입별 통계
+        const typeKey = String(opt.type);
+        if (!typeStats[typeKey]) {
+          typeStats[typeKey] = { count: 0, samples: [] };
+        }
+        typeStats[typeKey].count++;
+        if (typeStats[typeKey].samples.length < 4) {
+          typeStats[typeKey].samples.push(opt.text);
+        }
+      }
+    }
+  }
+
+  events.sort(function (a, b) {
+    return a.seqno - b.seqno;
+  });
+
+  // seqno 빈 번호 확인 (연속이 아니면 놓친 이벤트가 있을 수 있음)
+  let gapCount = 0;
+  for (let i = 1; i < events.length; i++) {
+    if (events[i].seqno - events[i - 1].seqno > 1) {
+      gapCount++;
+    }
+  }
+
+  // 필드 구조 (경로 → 타입/예시)
+  const schema = {};
+  collectSchema(data, "", schema);
+
+  // 라인업/엔트리: 마지막 이닝 데이터 기준
+  let lastTrd = null;
+  if (innings.length > 0 && innings[innings.length - 1].result) {
+    lastTrd = innings[innings.length - 1].result.textRelayData || null;
+  }
+
+  return {
+    events: events,
+    typeStats: typeStats,
+    duplicateCount: duplicateCount,
+    noSeqnoCount: noSeqnoCount,
+    gapCount: gapCount,
+    ptsLocations: Object.keys(ptsLocations),
+    schema: schema,
+    lastTextRelayData: lastTrd,
+    inningCount: innings.length,
+  };
+}
+
+// ---------------------------------------------------------------------
+// 객체를 돌면서 "경로 → 타입, 등장 횟수, 예시 값"을 모은다.
+// 배열은 경로에 [] 를 붙이고 안쪽 원소를 전부 같은 경로로 합친다.
+// 예: innings[].result.textRelayData.textRelays[].textOptions[].speed → number, "144"
+// ---------------------------------------------------------------------
+function collectSchema(value, path, out) {
+  let type;
+  if (value === null) type = "null";
+  else if (Array.isArray(value)) type = "array";
+  else type = typeof value;
+
+  if (path !== "") {
+    if (!out[path]) {
+      out[path] = { types: {}, count: 0, sample: undefined };
+    }
+    out[path].types[type] = true;
+    out[path].count++;
+    // 예시 값: 처음 나온 의미 있는 기본값
+    if (out[path].sample === undefined && type !== "object" && type !== "array" && value !== "" && value !== null) {
+      out[path].sample = String(value).slice(0, 60);
+    }
+  }
+
+  if (type === "array") {
+    // 너무 큰 배열은 앞쪽 500개만 본다
+    const limit = Math.min(value.length, 500);
+    for (let i = 0; i < limit; i++) {
+      collectSchema(value[i], path + "[]", out);
+    }
+  } else if (type === "object") {
+    for (const key of Object.keys(value)) {
+      collectSchema(value[key], path === "" ? key : path + "." + key, out);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// 콘솔 출력 (응답 구조 확인용)
+// ---------------------------------------------------------------------
+function printRelayToConsole(data, analysis) {
+  console.group("[relay] " + data.gameId + " — " + analysis.inningCount + "이닝, 텍스트 " + analysis.events.length + "개");
+
+  console.log("전체 응답 원본 (window.__relay):", data);
+  console.log("경기 정보(game):", data.game);
+  if (data.errors && data.errors.length > 0) {
+    console.warn("실패한 이닝 요청:", data.errors);
+  }
+
+  if (data.innings && data.innings[0] && data.innings[0].result) {
+    console.log("이닝 응답 result의 키:", Object.keys(data.innings[0].result));
+    const trd = data.innings[0].result.textRelayData;
+    if (trd) {
+      console.log("textRelayData의 키:", Object.keys(trd));
+      if (trd.textRelays && trd.textRelays[0]) {
+        console.log("textRelays[0] (타석 1개) 예시:", trd.textRelays[0]);
+      }
+    }
+  }
+
+  // 타입별 개수 + 예시
+  const typeRows = [];
+  for (const typeKey of Object.keys(analysis.typeStats)) {
+    typeRows.push({
+      type: typeKey,
+      이름: getTextTypeName(typeKey),
+      개수: analysis.typeStats[typeKey].count,
+      예시: analysis.typeStats[typeKey].samples.join(" / "),
+    });
+  }
+  console.log("textOptions.type 별 개수:");
+  console.table(typeRows);
+
+  // 타입별 원본 1개씩 (필드 확인용)
+  const firstOfType = {};
+  for (const ev of analysis.events) {
+    const key = String(ev.type);
+    if (!firstOfType[key]) {
+      firstOfType[key] = ev.raw;
+    }
+  }
+  for (const key of Object.keys(firstOfType)) {
+    console.log("type " + key + " (" + getTextTypeName(key) + ") 원본 예시:", firstOfType[key]);
+  }
+
+  console.log(
+    "seqno 확인 — 중복: " + analysis.duplicateCount +
+    ", seqno 없음: " + analysis.noSeqnoCount +
+    ", 번호 건너뜀: " + analysis.gapCount
+  );
+  console.log("pts(투구 추적) 관련 필드 위치:", analysis.ptsLocations.length > 0 ? analysis.ptsLocations : "없음");
+
+  console.log("앞쪽 40개 이벤트 (seqno 순):");
+  console.table(
+    analysis.events.slice(0, 40).map(function (ev) {
+      return {
+        seqno: ev.seqno,
+        회: ev.inning + ev.half,
+        type: ev.type + " " + getTextTypeName(ev.type),
+        text: ev.text,
+        pitchResult: ev.raw.pitchResult,
+        stuff: ev.raw.stuff,
+        speed: ev.raw.speed,
+      };
+    })
+  );
+
+  console.groupEnd();
+}
+
+// ---------------------------------------------------------------------
+// 인스펙터 탭 렌더링
+// ---------------------------------------------------------------------
+function renderInspectorTab() {
+  const body = document.getElementById("insp-body");
+  const data = state.relayData;
+  const analysis = state.analysis;
+  if (!data || !analysis) {
+    return;
+  }
+
+  switch (state.currentTab) {
+    case "summary":
+      body.innerHTML = renderSummaryTab(data, analysis);
+      break;
+    case "events":
+      body.innerHTML = renderEventsTab(analysis);
+      break;
+    case "schema":
+      body.innerHTML = renderSchemaTab(analysis);
+      bindSchemaFilter();
+      break;
+    case "lineup":
+      body.innerHTML = renderLineupTab(analysis);
+      break;
+    case "raw":
+      body.innerHTML = renderRawTab(data);
+      break;
+  }
+}
+
+function renderSummaryTab(data, analysis) {
+  let html = "";
+
+  // 네이버 문자중계 형식이 아니면 (KBO 공식 / 다음 / 경기 목록 등) 최상위 키만 보여주고 끝
+  if (data.provider !== "naver" || analysis.inningCount === 0) {
+    html += "<h3>원본 데이터 (" + escapeHtml(data.provider || "알 수 없음") + ")</h3>";
+    html += '<p class="note">네이버 문자중계 형식이 아니라서 요약 분석은 건너뜀. "필드 구조" / "원본" 탭에서 확인.</p>';
+    html += '<p class="note">최상위 키: ' + Object.keys(data).map(function (k) {
+      return '<span class="pill mono">' + escapeHtml(k) + "</span>";
+    }).join(" ") + "</p>";
+    return html;
+  }
+
+  // 경기 정보
+  const game = data.game || {};
+  html += "<h3>경기 정보 (/schedule/games/{gameId} → result.game)</h3>";
+  if (data.gameError) {
+    html += '<p class="note bad">경기 정보 요청 실패: ' + escapeHtml(JSON.stringify(data.gameError)) + "</p>";
+  }
+  html += '<table class="grid"><tr><th>필드</th><th>값</th></tr>';
+  for (const key of Object.keys(game)) {
+    const v = game[key];
+    const shown = typeof v === "object" && v !== null ? JSON.stringify(v).slice(0, 120) : v;
+    html += '<tr><td class="mono">' + escapeHtml(key) + '</td><td class="mono">' + escapeHtml(shown) + "</td></tr>";
+  }
+  html += "</table>";
+
+  // 받은 이닝
+  html += "<h3>받은 이닝</h3>";
+  html += '<p class="note">' + analysis.inningCount + "개 이닝 (마지막: " + escapeHtml(data.lastInning) + "회)";
+  if (data.errors && data.errors.length > 0) {
+    html += ' · <span class="bad">실패 ' + data.errors.length + "건 (콘솔 확인)</span>";
+  }
+  html += "</p>";
+
+  // seqno 상태
+  html += "<h3>이벤트 ID(seqno) 확인 — 실시간 폴링 중복 제거 기준으로 쓸 수 있는지</h3>";
+  html += '<p class="note">텍스트 ' + analysis.events.length + "개 · " +
+    "중복 " + spanOkBad(analysis.duplicateCount === 0, analysis.duplicateCount) + " · " +
+    "seqno 없음 " + spanOkBad(analysis.noSeqnoCount === 0, analysis.noSeqnoCount) + " · " +
+    "번호 건너뜀 " + spanOkBad(analysis.gapCount === 0, analysis.gapCount) + "</p>";
+
+  // 투구 추적 데이터
+  html += "<h3>투구 추적(pts) 필드</h3>";
+  if (analysis.ptsLocations.length === 0) {
+    html += '<p class="note">"pts"가 들어간 필드 없음 → 투구 위치는 결과 기반 랜덤으로 가야 할 수 있음. "필드 구조" 탭에서 x/y/z 비슷한 필드가 있는지 확인.</p>';
+  } else {
+    html += '<p class="note">' + analysis.ptsLocations.map(function (p) { return '<span class="pill mono">' + escapeHtml(p) + "</span>"; }).join(" ") + "</p>";
+  }
+
+  // 타입별 개수
+  html += "<h3>textOptions.type 별 개수</h3>";
+  html += '<table class="grid"><tr><th>type</th><th>이름(추정)</th><th>개수</th><th>예시 텍스트</th></tr>';
+  const typeKeys = Object.keys(analysis.typeStats).sort(function (a, b) { return Number(a) - Number(b); });
+  for (const typeKey of typeKeys) {
+    const st = analysis.typeStats[typeKey];
+    html += "<tr>" +
+      '<td class="mono">' + escapeHtml(typeKey) + "</td>" +
+      "<td>" + escapeHtml(getTextTypeName(typeKey)) + "</td>" +
+      "<td>" + st.count + "</td>" +
+      "<td>" + st.samples.map(escapeHtml).join("<br>") + "</td>" +
+      "</tr>";
+  }
+  html += "</table>";
+
+  return html;
+}
+
+function spanOkBad(isOk, value) {
+  return '<span class="' + (isOk ? "ok" : "bad") + '">' + value + "</span>";
+}
+
+function renderEventsTab(analysis) {
+  let html = '<p class="note">seqno 순서 = 실제 일어난 순서. 3D 재생 큐는 이 순서대로 쌓인다. 볼카운트·아웃·주자·점수는 각 텍스트의 currentGameState 값.</p>';
+  html += '<table class="grid"><tr>' +
+    "<th>seqno</th><th>회</th><th>type</th><th>텍스트</th>" +
+    "<th>투구결과</th><th>구종</th><th>구속</th>" +
+    "<th>B-S-O</th><th>주자(1·2·3루)</th><th>점수</th>" +
+    "</tr>";
+
+  let prevHalfKey = "";
+  for (const ev of analysis.events) {
+    const raw = ev.raw;
+    const gs = raw.currentGameState || {};
+    const halfKey = ev.inning + ev.half;
+    const rowClass = halfKey !== prevHalfKey ? ' class="inning-start"' : "";
+    prevHalfKey = halfKey;
+
+    // 볼카운트 필드명(ball/strike)은 추정. 없으면 빈칸.
+    const bso = valueOrDash(gs.ball) + "-" + valueOrDash(gs.strike) + "-" + valueOrDash(gs.out);
+    const bases = valueOrDash(gs.base1) + " · " + valueOrDash(gs.base2) + " · " + valueOrDash(gs.base3);
+    const score = valueOrDash(gs.awayScore) + ":" + valueOrDash(gs.homeScore);
+
+    html += "<tr" + rowClass + ">" +
+      '<td class="mono">' + escapeHtml(ev.seqno) + "</td>" +
+      "<td>" + escapeHtml(halfKey) + "</td>" +
+      '<td class="mono">' + escapeHtml(ev.type) + " " + escapeHtml(getTextTypeName(ev.type)) + "</td>" +
+      "<td>" + escapeHtml(ev.text) + "</td>" +
+      "<td>" + escapeHtml(getPitchResultName(raw.pitchResult)) + "</td>" +
+      "<td>" + escapeHtml(raw.stuff) + "</td>" +
+      "<td>" + escapeHtml(raw.speed) + "</td>" +
+      '<td class="mono">' + escapeHtml(bso) + "</td>" +
+      '<td class="mono">' + escapeHtml(bases) + "</td>" +
+      '<td class="mono">' + escapeHtml(score) + "</td>" +
+      "</tr>";
+  }
+  html += "</table>";
+  return html;
+}
+
+function valueOrDash(v) {
+  if (v === undefined || v === null || v === "") return "-";
+  return v;
+}
+
+function renderSchemaTab(analysis) {
+  let html = '<p class="note">응답 안의 모든 필드 경로. 배열은 [] 로 합쳐서 보여줌. 2~5단계 코드는 여기 있는 이름만 쓴다.</p>';
+  html += '<input type="text" id="schema-filter" placeholder="필드 이름으로 거르기 (예: textOptions, pts, lineup)" style="width:100%;margin:6px 0">';
+  html += '<table class="grid" id="schema-table"><tr><th>경로</th><th>타입</th><th>등장 횟수</th><th>예시 값</th></tr>';
+  const paths = Object.keys(analysis.schema).sort();
+  for (const path of paths) {
+    const info = analysis.schema[path];
+    html += '<tr data-path="' + escapeHtml(path.toLowerCase()) + '">' +
+      '<td class="mono">' + escapeHtml(path) + "</td>" +
+      '<td class="mono">' + escapeHtml(Object.keys(info.types).join("|")) + "</td>" +
+      "<td>" + info.count + "</td>" +
+      '<td class="mono">' + escapeHtml(info.sample === undefined ? "" : info.sample) + "</td>" +
+      "</tr>";
+  }
+  html += "</table>";
+  return html;
+}
+
+function bindSchemaFilter() {
+  const input = document.getElementById("schema-filter");
+  input.addEventListener("input", function () {
+    const keyword = input.value.trim().toLowerCase();
+    const rows = document.querySelectorAll("#schema-table tr[data-path]");
+    for (const row of rows) {
+      const match = keyword === "" || row.getAttribute("data-path").indexOf(keyword) !== -1;
+      row.style.display = match ? "" : "none";
+    }
+  });
+}
+
+function renderLineupTab(analysis) {
+  const trd = analysis.lastTextRelayData;
+  if (!trd) {
+    return '<p class="note">마지막 이닝 textRelayData가 없음</p>';
+  }
+
+  let html = '<p class="note">마지막 이닝 응답에 들어 있는 라인업/엔트리 원본. 수비 위치·등번호·좌우타 필드 이름을 여기서 확인.</p>';
+
+  // 외부 실측으로 알려진 키 4개 + 그 밖에 lineup/entry가 들어간 키
+  const keys = [];
+  for (const key of Object.keys(trd)) {
+    const lower = key.toLowerCase();
+    if (lower.indexOf("lineup") !== -1 || lower.indexOf("entry") !== -1) {
+      keys.push(key);
+    }
+  }
+  if (keys.length === 0) {
+    html += '<p class="note bad">textRelayData 안에 lineup/entry 키가 없음. 필드 구조 탭에서 찾아볼 것.</p>';
+  }
+
+  for (const key of keys) {
+    const block = trd[key];
+    html += "<h3>" + escapeHtml(key) + "</h3>";
+    if (block && typeof block === "object" && !Array.isArray(block)) {
+      html += '<p class="note">하위 키: ' + Object.keys(block).map(function (k) {
+        const v = block[k];
+        const size = Array.isArray(v) ? " (" + v.length + "명)" : "";
+        return '<span class="pill mono">' + escapeHtml(k + size) + "</span>";
+      }).join(" ") + "</p>";
+    }
+    html += '<pre class="json">' + escapeHtml(JSON.stringify(block, null, 2)) + "</pre>";
+  }
+  return html;
+}
+
+function renderRawTab(data) {
+  let text = JSON.stringify(data, null, 2);
+  let note = "";
+  // 너무 길면 화면이 멈추니 앞부분만 (전체는 "원본 JSON 저장" 또는 콘솔 window.__relay)
+  const limit = 200000;
+  if (text.length > limit) {
+    note = '<p class="note">전체 ' + Math.round(text.length / 1024) + "KB 중 앞부분만 표시. 전체는 \"원본 JSON 저장\" 버튼.</p>";
+    text = text.slice(0, limit) + "\n…(생략)";
+  }
+  return note + '<pre class="json">' + escapeHtml(text) + "</pre>";
+}
+
+function downloadRelayJson() {
+  if (!state.relayData) return;
+  const blob = new Blob([JSON.stringify(state.relayData, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "relay_" + (state.relayData.gameId || "game") + ".json";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 1000);
+}
+
+function closeInspector() {
+  document.getElementById("inspector").classList.remove("open");
+}
+
+// =====================================================================
+// 데이터 소스 점검 — 배포된 서버에서 네이버 / KBO 공식 / 다음을 차례로 호출해 본다
+// =====================================================================
+
+// 실패해도 예외 없이 결과를 돌려주는 /api 호출
+async function fetchApiRaw(path) {
+  const startedAt = performance.now();
+  try {
+    const res = await fetch(path, { cache: "no-store" });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = null;
+    }
+    const ms = Math.round(performance.now() - startedAt);
+    const ok = res.ok && data !== null && data.ok !== false;
+    let errorText = "";
+    if (!ok) {
+      if (data === null) {
+        errorText = "JSON 아님 (HTTP " + res.status + "): " + text.slice(0, 120);
+      } else {
+        errorText = (data.upstreamError || data.error || "실패") + (data.upstreamStatus ? " (외부 HTTP " + data.upstreamStatus + ")" : "");
+      }
+    }
+    return { ok: ok, status: res.status, data: data, ms: ms, errorText: errorText };
+  } catch (e) {
+    return { ok: false, status: 0, data: null, ms: Math.round(performance.now() - startedAt), errorText: "요청 실패: " + e.message };
+  }
+}
+
+// 네이버 gameId → KBO 공식 gameId + 시리즈 번호
+//   정규시즌:   20260920HHLG02026 → 20260920HHLG0, srId 0
+//   포스트시즌: 77771104KTSS02026 → 20261104KTSS0, srId 7  (앞 4자리 = 시리즈 번호 반복)
+function naverIdToKbo(naverId) {
+  if (!naverId || naverId.length < 17) {
+    return null;
+  }
+  const year = naverId.slice(-4);
+  const head = naverId.slice(0, 4);
+  const middle = naverId.slice(4, -4); // MMDD + 원정 + 홈 + 더블헤더번호
+
+  if (head === year) {
+    return { gameId: head + middle, srId: "0" };
+  }
+  if (/^(\d)\1\1\1$/.test(head)) {
+    return { gameId: year + middle, srId: head.charAt(0) };
+  }
+  return null;
+}
+
+// 점검 표에 줄 하나 추가 → 나중에 결과 채우는 함수를 돌려준다
+function addProbeRow(sourceName, itemName) {
+  const table = document.getElementById("probe-table");
+  const tr = document.createElement("tr");
+  tr.innerHTML =
+    "<td>" + escapeHtml(sourceName) + "</td>" +
+    "<td>" + escapeHtml(itemName) + "</td>" +
+    '<td class="probe-result">…</td>' +
+    '<td class="probe-ms"></td>' +
+    '<td class="probe-detail"></td>' +
+    '<td class="probe-action"></td>';
+  table.appendChild(tr);
+
+  return function fill(result, detailText) {
+    const resultCell = tr.querySelector(".probe-result");
+    if (result === null) {
+      resultCell.innerHTML = '<span style="color:var(--dim)">건너뜀</span>';
+    } else if (result.ok) {
+      resultCell.innerHTML = '<span class="ok">성공</span>';
+    } else {
+      resultCell.innerHTML = '<span class="bad">실패</span>';
+    }
+    tr.querySelector(".probe-ms").textContent = result ? result.ms + "ms" : "";
+    tr.querySelector(".probe-detail").textContent = detailText || (result && !result.ok ? result.errorText : "");
+
+    if (result && result.data) {
+      const btn = document.createElement("button");
+      btn.textContent = "원본";
+      btn.addEventListener("click", function () {
+        openDataInInspector(sourceName + " · " + itemName, result.data);
+      });
+      tr.querySelector(".probe-action").appendChild(btn);
+    }
+  };
+}
+
+// 아무 응답이나 인스펙터로 열기 (필드 구조 / 원본 탭으로 확인)
+function openDataInInspector(title, data) {
+  state.currentGameId = data.gameId || null;
+  document.getElementById("inspector").classList.add("open");
+  document.getElementById("insp-title").textContent = title;
+  showRelayData(data);
+}
+
+async function runSourceProbe() {
+  const iso = document.getElementById("date-input").value || todayInKoreaISO();
+  const ymd = isoToYmd(iso);
+  const manualId = document.getElementById("manual-game-id").value.trim();
+
+  const panel = document.getElementById("probe-panel");
+  panel.style.display = "block";
+  document.getElementById("probe-note").textContent =
+    iso + " 기준" + (manualId ? " · 직접 입력한 경기 ID " + manualId + " 사용" : "") + " — 위에서부터 차례로 호출";
+
+  // 표 초기화 (머리줄만 남김)
+  const table = document.getElementById("probe-table");
+  while (table.rows.length > 1) {
+    table.deleteRow(1);
+  }
+
+  const log = {}; // 콘솔 출력용
+
+  // ---------- 1. 네이버 경기 목록 ----------
+  const fillNaverGames = addProbeRow("네이버", "경기 목록");
+  const naverGames = await fetchApiRaw("/api/games?date=" + ymd + "&debug=1");
+  log.naverGames = naverGames;
+  let naverGameId = manualId || null;
+  if (naverGames.ok) {
+    const games = naverGames.data.games || [];
+    // 진행 중 → 종료 → 아무거나 순서로 하나 고름
+    let picked = null;
+    for (const g of games) {
+      if (!picked && g.state === "live") picked = g;
+    }
+    for (const g of games) {
+      if (!picked && g.state === "final") picked = g;
+    }
+    if (!picked && games.length > 0) picked = games[0];
+    if (!naverGameId && picked) naverGameId = picked.gameId;
+    fillNaverGames(naverGames, games.length + "경기" + (picked ? " · 점검용: " + picked.gameId : ""));
+  } else {
+    fillNaverGames(naverGames);
+  }
+
+  // ---------- 2. 네이버 문자중계 (1회만) ----------
+  const fillNaverRelay = addProbeRow("네이버", "문자중계 1회");
+  if (naverGameId) {
+    const naverRelay = await fetchApiRaw("/api/relay?gameId=" + encodeURIComponent(naverGameId) + "&inning=1");
+    log.naverRelay = naverRelay;
+    if (naverRelay.ok) {
+      const trd = naverRelay.data.result ? naverRelay.data.result.textRelayData : null;
+      const relayCount = trd && Array.isArray(trd.textRelays) ? trd.textRelays.length : 0;
+      fillNaverRelay(naverRelay, naverGameId + " · 타석 " + relayCount + "개" + (naverRelay.data.inningExists ? "" : " (1회 데이터 없음)"));
+    } else {
+      fillNaverRelay(naverRelay);
+    }
+  } else {
+    fillNaverRelay(null, "점검할 경기 ID 없음 (직접 입력 칸에 넣으면 사용)");
+  }
+
+  // ---------- 3. KBO 공식 경기 목록 ----------
+  const fillKboGames = addProbeRow("KBO 공식", "경기 목록");
+  const kboGames = await fetchApiRaw("/api/kbo?type=games&date=" + ymd);
+  log.kboGames = kboGames;
+  let kboTarget = naverIdToKbo(manualId); // 직접 입력한 네이버 ID가 있으면 변환해서 우선 사용
+  if (kboGames.ok) {
+    const games = kboGames.data.games || [];
+    if (!kboTarget && games.length > 0) {
+      kboTarget = { gameId: games[0].G_ID, srId: String(games[0]._srId) };
+    }
+    fillKboGames(kboGames, games.length + "경기" + (kboTarget ? " · 점검용: " + kboTarget.gameId + " (srId " + kboTarget.srId + ")" : ""));
+  } else {
+    fillKboGames(kboGames);
+  }
+  if (!kboTarget) {
+    kboTarget = naverIdToKbo(naverGameId); // KBO 목록이 실패했으면 네이버 ID에서 변환
+  }
+
+  // ---------- 4. KBO 공식 문자중계 (1회) ----------
+  const fillKboRelay = addProbeRow("KBO 공식", "문자중계 1회");
+  if (kboTarget && kboTarget.gameId) {
+    const kboRelay = await fetchApiRaw(
+      "/api/kbo?type=relay&gameId=" + encodeURIComponent(kboTarget.gameId) +
+      "&srId=" + encodeURIComponent(kboTarget.srId) + "&inning=1"
+    );
+    log.kboRelay = kboRelay;
+    if (kboRelay.ok) {
+      const live = kboRelay.data.live || {};
+      fillKboRelay(kboRelay, kboTarget.gameId + " · 최상위 키: " + Object.keys(live).join(", "));
+    } else {
+      fillKboRelay(kboRelay);
+    }
+  } else {
+    fillKboRelay(null, "점검할 경기 ID 없음");
+  }
+
+  // ---------- 5. 다음 경기 목록 ----------
+  const fillDaumGames = addProbeRow("다음", "경기 목록");
+  const daumGames = await fetchApiRaw("/api/daum?type=games&date=" + ymd);
+  log.daumGames = daumGames;
+  let daumGameId = null;
+  if (daumGames.ok) {
+    const games = daumGames.data.games || [];
+    if (games.length > 0 && games[0].gameId !== undefined) {
+      daumGameId = String(games[0].gameId);
+    }
+    fillDaumGames(daumGames, games.length + "경기" + (daumGameId ? " · 점검용: " + daumGameId : ""));
+  } else {
+    fillDaumGames(daumGames);
+  }
+
+  // ---------- 6. 다음 경기 상세 ----------
+  const fillDaumGame = addProbeRow("다음", "경기 상세");
+  if (daumGameId) {
+    const daumGame = await fetchApiRaw("/api/daum?type=game&gameId=" + encodeURIComponent(daumGameId));
+    log.daumGame = daumGame;
+    fillDaumGame(daumGame, daumGame.ok ? "최상위 키: " + Object.keys(daumGame.data.raw || {}).join(", ") : "");
+  } else {
+    fillDaumGame(null, "다음 경기 ID 없음");
+  }
+
+  // ---------- 7. 다음 문자중계 주소 후보 ----------
+  const fillDaumRelay = addProbeRow("다음", "문자중계 주소 찾기(추측)");
+  if (daumGameId) {
+    const daumRelay = await fetchApiRaw("/api/daum?type=relayProbe&gameId=" + encodeURIComponent(daumGameId));
+    log.daumRelay = daumRelay;
+    if (daumRelay.ok) {
+      const hits = [];
+      for (const r of daumRelay.data.results || []) {
+        if (r.ok) hits.push(r.url);
+      }
+      fillDaumRelay(
+        { ok: daumRelay.data.found, ms: daumRelay.ms, data: daumRelay.data },
+        daumRelay.data.found ? "찾음: " + hits.join(" , ") : "후보 전부 실패 → Network 탭 확인 필요"
+      );
+    } else {
+      fillDaumRelay(daumRelay);
+    }
+  } else {
+    fillDaumRelay(null, "다음 경기 ID 없음");
+  }
+
+  console.group("[소스 점검] " + ymd);
+  console.log(log);
+  console.groupEnd();
+  window.__probe = log;
+}
+
+// =====================================================================
+// 이벤트 연결 + 시작
+// =====================================================================
+function setup() {
+  const dateInput = document.getElementById("date-input");
+  dateInput.value = todayInKoreaISO();
+
+  document.getElementById("btn-load").addEventListener("click", loadGames);
+  dateInput.addEventListener("change", loadGames);
+  document.getElementById("btn-prev-day").addEventListener("click", function () {
+    dateInput.value = shiftDateISO(dateInput.value || todayInKoreaISO(), -1);
+    loadGames();
+  });
+  document.getElementById("btn-next-day").addEventListener("click", function () {
+    dateInput.value = shiftDateISO(dateInput.value || todayInKoreaISO(), 1);
+    loadGames();
+  });
+  document.getElementById("btn-today").addEventListener("click", function () {
+    dateInput.value = todayInKoreaISO();
+    loadGames();
+  });
+
+  document.getElementById("btn-probe").addEventListener("click", runSourceProbe);
+
+  const debugToggle = document.getElementById("debug-toggle");
+  debugToggle.addEventListener("change", function () {
+    state.debug = debugToggle.checked;
+    loadGames();
+  });
+
+  // 경기 ID 직접 입력
+  document.getElementById("btn-manual-open").addEventListener("click", function () {
+    const id = document.getElementById("manual-game-id").value.trim();
+    if (id) {
+      openInspector(id, "직접 입력");
+    }
+  });
+
+  // 저장해 둔 relay JSON 열기 (네트워크 없이 구조 확인)
+  document.getElementById("json-file-input").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const data = JSON.parse(reader.result);
+        state.currentGameId = data.gameId || null;
+        document.getElementById("inspector").classList.add("open");
+        document.getElementById("insp-title").textContent = (data.gameId || file.name) + " — 저장된 파일";
+        showRelayData(data);
+      } catch (err) {
+        setStatus("JSON 파일을 읽지 못함: " + err.message, true);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // 인스펙터 버튼들
+  document.getElementById("btn-insp-close").addEventListener("click", closeInspector);
+  document.getElementById("btn-insp-download").addEventListener("click", downloadRelayJson);
+  document.getElementById("btn-insp-console").addEventListener("click", function () {
+    if (state.relayData) printRelayToConsole(state.relayData, state.analysis);
+  });
+  document.getElementById("btn-insp-reload").addEventListener("click", function () {
+    if (state.currentGameId) openInspector(state.currentGameId, "다시 받기");
+  });
+
+  const tabButtons = document.querySelectorAll("#insp-tabs button");
+  for (const btn of tabButtons) {
+    btn.addEventListener("click", function () {
+      for (const other of tabButtons) other.classList.remove("active");
+      btn.classList.add("active");
+      state.currentTab = btn.getAttribute("data-tab");
+      renderInspectorTab();
+    });
+  }
+
+  loadGames();
+}
+
+setup();
+</script>
+</body>
+</html>
