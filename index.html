@@ -144,6 +144,54 @@
   .pill { display: inline-block; padding: 0 6px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); font-size: 11px; }
   .ok { color: var(--accent); }
   .bad { color: var(--live); }
+
+  /* ===================================================================
+     입장 화면 (3D)
+     =================================================================== */
+  #game-view { position: fixed; inset: 0; z-index: 30; background: #000; display: none; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #game-view.open { display: block; }
+  #gv-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .gv-panel { position: absolute; background: rgba(8,11,16,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #gv-top { top: max(8px, env(safe-area-inset-top)); left: max(8px, env(safe-area-inset-left)); padding: 6px 10px; display: flex; align-items: center; gap: 12px; font-size: 13px; max-width: calc(100vw - 130px); flex-wrap: wrap; }
+  .gv-score { display: grid; grid-template-columns: 6px auto 26px; gap: 2px 6px; align-items: center; }
+  .gv-score .chip { width: 6px; height: 16px; border-radius: 2px; }
+  .gv-score b { font-size: 17px; text-align: right; }
+  #gv-inning { font-weight: 800; white-space: nowrap; }
+  .gv-bso { display: grid; grid-template-columns: 12px auto; gap: 2px 4px; align-items: center; font-size: 11px; color: var(--dim); }
+  .gv-bso span i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #2a2f37; margin-right: 3px; }
+  #gv-b i.on { background: #3fd46b; } #gv-s i.on { background: #ffd84d; } #gv-o i.on { background: #ff4d4f; }
+  #gv-bases rect { fill: #2a2f37; stroke: #8b95a7; stroke-width: 1; }
+  #gv-bases rect.on { fill: #ffd84d; }
+  .gv-matchup { font-size: 12px; line-height: 1.45; }
+  #gv-venue { font-size: 11px; color: var(--dim); }
+  #gv-cams { top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); padding: 6px; display: flex; flex-direction: column; gap: 4px; max-height: calc(100vh - 150px); overflow-y: auto; }
+  #gv-cams select { font-size: 12px; padding: 4px; background: rgba(255,255,255,0.08); border: 1px solid var(--line); border-radius: 8px; color: var(--text); }
+  #gv-cams select option { background: #171b22; }
+  #gv-cams button, #gv-controls button { padding: 5px 9px; font-size: 12px; background: rgba(255,255,255,0.08); }
+  #gv-cams button.active, #gv-controls button.active { background: var(--accent); color: #062417; border-color: var(--accent); }
+  #gv-bottom { left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+  #gv-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #gv-status { font-size: 12px; color: var(--dim); margin-left: 4px; }
+  #gv-log { max-height: 76px; overflow-y: auto; font-size: 12px; line-height: 1.5; }
+  #gv-bottom.collapsed #gv-log { display: none; }
+  #gv-log div { padding: 0 4px; border-radius: 4px; color: #b9c2d0; cursor: pointer; }
+  #gv-log div.t1 { color: #8b95a7; padding-left: 14px; }
+  #gv-log div.t13, #gv-log div.t23 { color: #fff; font-weight: 700; }
+  #gv-log div.t0 { color: var(--accent); font-weight: 700; }
+  #gv-log div.current { background: rgba(63,182,139,0.25); color: #fff; }
+  #gv-toast { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(0.9); padding: 8px 16px; border-radius: 10px; background: rgba(0,0,0,0.6); font-size: 16px; font-weight: 700; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; text-align: center; max-width: 80vw; }
+  #gv-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  #gv-toast.big { font-size: 26px; padding: 10px 22px; }
+  #gv-cams #gv-exit { background: rgba(255,77,79,0.25); border-color: rgba(255,77,79,0.6); }
+  #gv-seat-picker, #gv-loading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.55); text-align: center; white-space: pre-wrap; }
+  #gv-seat-picker .seats { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 8px; }
+  #gv-seat-picker button { padding: 14px 10px; font-size: 15px; font-weight: 700; background: rgba(23,27,34,0.92); }
+  #gv-rotate { display: none; }
+  @media (orientation: portrait) and (max-width: 700px) {
+    #gv-rotate { display: block; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,0.75); padding: 10px 14px; border-radius: 10px; pointer-events: none; }
+    #gv-top { max-width: calc(100vw - 16px); }
+    #gv-cams { top: auto; bottom: 150px; flex-direction: row; flex-wrap: wrap; max-width: calc(100vw - 16px); }
+  }
 </style>
 </head>
 <body>
@@ -182,10 +230,14 @@
   <span>경기 ID 직접 입력</span>
   <input type="text" id="manual-game-id" placeholder="예: 20260920HHLG02026" size="20">
   <button id="btn-manual-open">문자중계 구조 보기</button>
+  <button id="btn-manual-3d" class="primary">3D로 입장(다시보기)</button>
   <span style="font-size:11px">네이버 ID 형식 — 정규시즌: 날짜+원정+홈+0+연도 / 포스트시즌: 앞 4자리가 시리즈 번호 반복(한국시리즈 7777MMDD…+연도)</span>
   <span style="flex-basis:100%;height:0"></span>
   <span>저장해 둔 relay JSON 열기</span>
   <input type="file" id="json-file-input" accept=".json,application/json">
+  <span style="flex-basis:100%;height:0"></span>
+  <span>저장해 둔 relay JSON으로 3D 입장</span>
+  <input type="file" id="json-file-3d" accept=".json,application/json">
 </div>
 
 <!-- =================================================================
@@ -209,7 +261,99 @@
   <div id="insp-body"></div>
 </div>
 
-<script>
+
+<!-- =================================================================
+     입장 화면 (3D 구장 + 관중석 시점)
+     ================================================================= -->
+<div id="game-view">
+  <canvas id="gv-canvas"></canvas>
+
+  <div id="gv-top" class="gv-panel">
+    <div class="gv-score">
+      <span class="chip" id="gv-away-chip"></span><span id="gv-away-name">원정</span><b id="gv-away-score">0</b>
+      <span class="chip" id="gv-home-chip"></span><span id="gv-home-name">홈</span><b id="gv-home-score">0</b>
+    </div>
+    <div>
+      <div id="gv-inning">1회초 ▲</div>
+      <div id="gv-venue"></div>
+    </div>
+    <div class="gv-bso">
+      <b>B</b><span id="gv-b"></span>
+      <b>S</b><span id="gv-s"></span>
+      <b>O</b><span id="gv-o"></span>
+    </div>
+    <svg id="gv-bases" width="44" height="34" viewBox="0 0 44 34">
+      <rect id="gv-base2" x="16" y="2" width="11" height="11" transform="rotate(45 21.5 7.5)"></rect>
+      <rect id="gv-base3" x="4" y="14" width="11" height="11" transform="rotate(45 9.5 19.5)"></rect>
+      <rect id="gv-base1" x="28" y="14" width="11" height="11" transform="rotate(45 33.5 19.5)"></rect>
+    </svg>
+    <div class="gv-matchup">
+      <div id="gv-pitcher">투수 -</div>
+      <div id="gv-batter">타자 -</div>
+    </div>
+  </div>
+
+  <div id="gv-cams" class="gv-panel">
+    <button id="gv-exit">✕ 나가기</button>
+    <button data-cam="1루 내야석">1루 내야석</button>
+    <button data-cam="3루 내야석">3루 내야석</button>
+    <button data-cam="포수 뒤">포수 뒤</button>
+    <button data-cam="외야석">외야석</button>
+    <button data-cam="응원단">응원단</button>
+    <button data-cam="중계 시점">중계 시점</button>
+    <button data-cam="하늘 시점">하늘 시점</button>
+    <button id="gv-gyro">자이로</button>
+    <button id="gv-labels" class="active">이름표</button>
+    <select id="gv-stadium" title="다른 구장으로 바꿔 보기">
+      <option value="">이 경기 구장</option>
+      <option value="잠실">잠실</option>
+      <option value="고척">고척</option>
+      <option value="인천">인천</option>
+      <option value="수원">수원</option>
+      <option value="대전">대전</option>
+      <option value="대구">대구</option>
+      <option value="사직">사직</option>
+      <option value="창원">창원</option>
+      <option value="광주">광주</option>
+    </select>
+  </div>
+
+  <div id="gv-toast"></div>
+
+  <div id="gv-bottom" class="gv-panel">
+    <div id="gv-controls">
+      <button id="gv-prev" title="이전 타석">⏮</button>
+      <button id="gv-play">▶</button>
+      <button id="gv-next" title="다음 타석">⏭</button>
+      <button id="gv-speed">1x</button>
+      <button id="gv-log-toggle">문자중계</button>
+      <span id="gv-status"></span>
+    </div>
+    <div id="gv-log"></div>
+  </div>
+
+  <div id="gv-seat-picker">
+    <div style="font-size:18px;font-weight:800">어디에 앉을까?</div>
+    <div class="seats">
+      <button data-cam="1루 내야석">1루 내야석</button>
+      <button data-cam="3루 내야석">3루 내야석</button>
+      <button data-cam="포수 뒤">포수 뒤</button>
+      <button data-cam="외야석">외야석</button>
+      <button data-cam="응원단">응원단 쪽</button>
+      <button data-cam="중계 시점">중계 시점</button>
+    </div>
+    <div style="font-size:12px;color:var(--dim)">화면을 끌면 고개를 돌리고, 두 손가락으로 확대/축소</div>
+  </div>
+  <div id="gv-loading"></div>
+  <div id="gv-rotate">📱 가로로 돌리면 더 잘 보여요</div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
 // =====================================================================
 // 1단계: 경기 목록 + 문자중계(relay) 응답 구조 확인
 //
@@ -514,12 +658,11 @@ function createGameCard(g) {
   enterBtn.disabled = g.state !== "live";
   replayBtn.disabled = g.state !== "final";
 
-  // 1단계에서는 둘 다 문자중계 구조 화면을 연다 (3D 화면은 2단계부터)
   enterBtn.addEventListener("click", function () {
-    openInspector(g.gameId, "실시간 입장");
+    openGameView(g.gameId, "live");
   });
   replayBtn.addEventListener("click", function () {
-    openInspector(g.gameId, "다시보기");
+    openGameView(g.gameId, "replay");
   });
   const inspectBtn = card.querySelector(".btn-inspect");
   if (inspectBtn) {
@@ -1336,6 +1479,32 @@ function setup() {
     }
   });
 
+  document.getElementById("btn-manual-3d").addEventListener("click", function () {
+    const id = document.getElementById("manual-game-id").value.trim();
+    if (id) {
+      openGameView(id, "replay");
+    }
+  });
+
+  // 저장해 둔 JSON으로 3D 입장 (네트워크 없이 테스트)
+  document.getElementById("json-file-3d").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    showGameViewShell();
+    setLoading("파일 읽는 중…");
+    reader.onload = function () {
+      try {
+        startGameView(JSON.parse(reader.result), "replay");
+      } catch (err) {
+        setLoading("JSON 파일을 읽지 못함: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  setupGameViewControls();
+
   // 저장해 둔 relay JSON 열기 (네트워크 없이 구조 확인)
   document.getElementById("json-file-input").addEventListener("change", function (e) {
     const file = e.target.files[0];
@@ -1377,6 +1546,2447 @@ function setup() {
 
   loadGames();
 }
+
+// =====================================================================
+// 2단계: 입장 화면 — 3D 구장 + 관중석 시점 + 전광판 + 기록 따라 재생
+//
+// 좌표계 (미터)
+//   원점 = 홈플레이트 뒤 꼭짓점, y = 위
+//   +z = 중견수 방향, 1루 = -x 쪽, 3루 = +x 쪽
+//   (Three.js 오른손 좌표계에서 홈 뒤에서 외야를 보면 1루가 오른쪽에 오도록)
+//
+// 네이버 PTS(투구 추적) 좌표 (피트)
+//   원점 = 홈플레이트 뒤 꼭짓점, y = 투수 쪽, z = 위, x = 포수 기준 오른쪽(1루 쪽)
+//   → 장면 좌표: x = -pts.x, y = pts.z, z = pts.y (모두 × 0.3048)
+// =====================================================================
+
+const FT = 0.3048; // 피트 → 미터
+const BASE_DIST = 27.43; // 베이스 간 거리
+const MOUND_DIST = 18.44; // 홈 → 투수판
+const HALF_DIAG = BASE_DIST / Math.SQRT2; // 19.40
+
+const FIRST_BASE = { x: -HALF_DIAG, z: HALF_DIAG };
+const SECOND_BASE = { x: 0, z: HALF_DIAG * 2 };
+const THIRD_BASE = { x: HALF_DIAG, z: HALF_DIAG };
+
+// 각도(도) + 거리 → 장면 좌표. 각도 0 = 중견수, +45 = 우익선(1루 쪽), -45 = 좌익선(3루 쪽)
+function fieldPoint(deg, dist) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: -dist * Math.sin(rad), z: dist * Math.cos(rad) };
+}
+
+// ---------------------------------------------------------------------
+// 구장별 파라미터
+//
+// fence.points: [각도, 거리] 꼭짓점 목록 (각도 -45 = 좌익선, 0 = 중앙, +45 = 우익선)
+// fence.mode:   "curve"    → 꼭짓점을 부드러운 곡선으로 이음
+//               "straight" → 꼭짓점 사이를 직선 벽으로 이음 (대구 팔각, 대전 오각, 창원)
+// walls:        특정 구간만 다른 높이/색 (대전 몬스터월)
+// netHeight:    펜스 위 철망 높이 (사직)
+// poleFoulWidth: 폴 근처 파울라인 ~ 관중석 거리, foulWidth: 내야 쪽 파울 지역 폭
+// [확인] = 기사/공식 자료로 확인한 값, [추정] = 확인 못 해서 비슷한 구장 기준으로 넣은 값
+// ---------------------------------------------------------------------
+function getStadiumParams(stadiumName) {
+  const name = String(stadiumName || "");
+
+  // 공통 기본값
+  const base = {
+    key: "default",
+    displayName: name || "야구장",
+    fence: { mode: "curve", points: [[-45, 99], [-22.5, 113], [0, 122], [22.5, 113], [45, 99]] },
+    fenceHeight: 3.0,
+    fenceColor: "#1e4a3a",
+    homeRunLineColor: "#f2c200",
+    walls: [],
+    netHeight: 0,
+    infieldRows: 16,
+    outfieldRows: 10,
+    upperTier: true,
+    outfieldUpper: false,
+    roof: false,
+    foulWidth: 18,
+    poleFoulWidth: 2.0,
+    backstop: 18,
+    homeSide: "1루", // 홈 더그아웃/응원석 쪽 (구장별 확인 필요)
+    seatColorA: "#2f4f7f",
+    seatColorB: "#3b5f94",
+    scoreboard: { width: 34, height: 15, deg: 0, style: "plain" },
+  };
+
+  if (name.indexOf("잠실") !== -1) {
+    // 잠실: 좌우 100 / 좌우중간 120 / 중앙 125 [확인], 펜스 2.6~2.7m [확인]. 국내 최대, 2층 관중석이 내외야를 감쌈
+    return Object.assign(base, {
+      key: "jamsil", displayName: "잠실야구장",
+      fence: { mode: "curve", points: [[-45, 100], [-22.5, 120], [0, 125], [22.5, 120], [45, 100]] },
+      fenceHeight: 2.6,
+      infieldRows: 18, outfieldRows: 14, foulWidth: 21, poleFoulWidth: 3, backstop: 20,
+      seatColorA: "#1f3a6e", seatColorB: "#a3263a",
+      scoreboard: { width: 32, height: 13, deg: 0, style: "plain" },
+    });
+  }
+  if (name.indexOf("고척") !== -1) {
+    // 고척: 좌우 99 / 중앙 122 / 펜스 4m [확인], 좌우중간 [추정]. 국내 유일 돔(지붕 높이 67.59m) [확인]
+    // 2층 외야석 때문에 펜스가 높음 [확인], 전광판 22.4 x 7.68m [확인]
+    return Object.assign(base, {
+      key: "gocheok", displayName: "고척스카이돔",
+      fence: { mode: "curve", points: [[-45, 99], [-22.5, 113], [0, 122], [22.5, 113], [45, 99]] },
+      fenceHeight: 4.0, roof: true, outfieldUpper: true, outfieldRows: 12,
+      foulWidth: 17, backstop: 17, seatColorA: "#5a1d2a", seatColorB: "#3a3f4a",
+      scoreboard: { width: 22.4, height: 7.7, deg: 0, style: "plain" },
+    });
+  }
+  if (name.indexOf("문학") !== -1 || name.indexOf("인천") !== -1 || name.indexOf("랜더스") !== -1) {
+    // 인천: 좌우 95 / 좌우중간 115 / 중앙 120 / 펜스 2.42m [확인]. 국내 최대 전광판 '빅보드' [확인] — 위치·크기 [추정]
+    return Object.assign(base, {
+      key: "incheon", displayName: "인천SSG랜더스필드",
+      fence: { mode: "curve", points: [[-45, 95], [-22.5, 115], [0, 120], [22.5, 115], [45, 95]] },
+      fenceHeight: 2.42, seatColorA: "#8a1c26", seatColorB: "#c9c9c9",
+      scoreboard: { width: 63, height: 18, deg: -18, style: "plain" },
+    });
+  }
+  if (name.indexOf("수원") !== -1) {
+    // 수원: 좌우 98 / 중앙 120 [확인], 좌우중간·펜스 높이 [추정]
+    // 전광판 28 x 9m, 수원 화성 성곽 모양 장식 [확인]
+    return Object.assign(base, {
+      key: "suwon", displayName: "수원KT위즈파크",
+      fence: { mode: "curve", points: [[-45, 98], [-22.5, 113], [0, 120], [22.5, 113], [45, 98]] },
+      fenceHeight: 3.0, infieldRows: 15, outfieldRows: 9,
+      fenceColor: "#1d1d1f", seatColorA: "#1c1c1c", seatColorB: "#a3121f",
+      scoreboard: { width: 28, height: 9, deg: 0, style: "fortress" },
+    });
+  }
+  if (name.indexOf("대전") !== -1) {
+    // 대전 한화생명볼파크: 좌측 99 / 좌중간 115 / 중앙 122 / 우중간 112 / 우측 95, 비대칭 오각형 외야 [확인]
+    // 펜스 2.4m 검은색 + 주황 홈런 라인, 철망 없음 [확인]
+    // 우측 몬스터월 높이 8m · 너비 32m, 표면 미디어글라스 [확인]
+    return Object.assign(base, {
+      key: "daejeon", displayName: "대전한화생명볼파크",
+      fence: { mode: "straight", points: [[-45, 99], [-22.5, 115], [0, 122], [22.5, 112], [45, 95]] },
+      fenceHeight: 2.4, fenceColor: "#121212", homeRunLineColor: "#ff7a00",
+      walls: [{ fromDeg: 26, toDeg: 45, height: 8.0, color: "#0d1b2e" }],
+      seatColorA: "#c4560e", seatColorB: "#2a2a2a",
+      scoreboard: { width: 30, height: 12, deg: -6, style: "plain" },
+    });
+  }
+  if (name.indexOf("대구") !== -1) {
+    // 대구 라이온즈파크: 좌우 99.5 / 중앙 122.5 / 좌우중간 107 (팔각형 직선 펜스) / 펜스 3.6m [확인]
+    // 익사이팅존 이후 외야 쪽 파울라인~관중석 4.6m [확인]
+    return Object.assign(base, {
+      key: "daegu", displayName: "대구삼성라이온즈파크",
+      fence: { mode: "straight", points: [[-45, 99.5], [-22.5, 107], [-10, 124.4], [10, 124.4], [22.5, 107], [45, 99.5]] },
+      fenceHeight: 3.6, poleFoulWidth: 4.6, foulWidth: 14,
+      seatColorA: "#0b4ea2", seatColorB: "#d8d8d8",
+    });
+  }
+  if (name.indexOf("사직") !== -1 || name.indexOf("부산") !== -1) {
+    // 사직: 좌우 95.8 / 중앙 120.5 [확인] (2022 홈플레이트 이동)
+    // 펜스: 2022~2024 6m '성담장' → 2024년 12월 보조펜스 철거로 철망 포함 4.8m [확인]. 좌우중간 [추정]
+    return Object.assign(base, {
+      key: "sajik", displayName: "사직야구장",
+      fence: { mode: "curve", points: [[-45, 95.8], [-22.5, 113], [0, 120.5], [22.5, 113], [45, 95.8]] },
+      fenceHeight: 2.8, netHeight: 2.0, // 벽 + 철망 = 4.8m
+      seatColorA: "#0a2a5c", seatColorB: "#8a1c1c",
+    });
+  }
+  if (name.indexOf("창원") !== -1) {
+    // 창원NC파크: 좌우 101 / 좌우중간 107 / 중앙 좌우측 123 / 중앙 122 / 펜스 3.3m [확인], 파울 지역 좁음 [확인]
+    return Object.assign(base, {
+      key: "changwon", displayName: "창원NC파크",
+      fence: { mode: "straight", points: [[-45, 101], [-22.5, 107], [-10, 123], [0, 122], [10, 123], [22.5, 107], [45, 101]] },
+      fenceHeight: 3.3, foulWidth: 14, poleFoulWidth: 3,
+      seatColorA: "#1d3c6e", seatColorB: "#b59a5b",
+    });
+  }
+  if (name.indexOf("광주") !== -1) {
+    // 광주: 좌우 99 / 좌우중간 117 / 중앙 121 [확인], 펜스 높이 [추정]
+    // 외야 파울라인~관중석 5.5m(국내 최소) [확인], 전광판 35 x 15m(당시 국내 최대) [확인], 좌석 전부 빨간색 [확인]
+    return Object.assign(base, {
+      key: "gwangju", displayName: "광주기아챔피언스필드",
+      fence: { mode: "curve", points: [[-45, 99], [-22.5, 117], [0, 121], [22.5, 117], [45, 99]] },
+      fenceHeight: 3.0, poleFoulWidth: 5.5, foulWidth: 16,
+      seatColorA: "#b0141f", seatColorB: "#c41a26",
+      scoreboard: { width: 35, height: 15, deg: 0, style: "plain" },
+    });
+  }
+  return base; // 모르는 구장: 기본값
+}
+
+// 각도의 펜스 꼭짓점 구간 찾기
+function fenceSegmentIndex(points, deg) {
+  for (let i = 0; i < points.length - 1; i++) {
+    if (deg <= points[i + 1][0]) return i;
+  }
+  return points.length - 2;
+}
+
+// 펜스까지 거리 (각도 -45 ~ +45)
+function fenceDistanceAt(deg, p) {
+  const points = p.fence.points;
+  const clamped = Math.max(points[0][0], Math.min(points[points.length - 1][0], deg));
+  const i = fenceSegmentIndex(points, clamped);
+
+  if (p.fence.mode === "straight") {
+    // 두 꼭짓점을 잇는 직선 벽과, 홈에서 그 각도로 뻗은 직선의 교점까지 거리
+    const a = fieldPoint(points[i][0], points[i][1]);
+    const b = fieldPoint(points[i + 1][0], points[i + 1][1]);
+    const rad = (clamped * Math.PI) / 180;
+    const dx = -Math.sin(rad);
+    const dz = Math.cos(rad);
+    // a + t(b - a) = s(dx, dz) 를 s에 대해 풀기
+    const ex = b.x - a.x;
+    const ez = b.z - a.z;
+    const denom = dx * ez - dz * ex;
+    if (Math.abs(denom) < 1e-9) return points[i][1];
+    return (a.x * ez - a.z * ex) / denom;
+  }
+
+  // 곡선: 꼭짓점 사이 Catmull-Rom (양 끝은 끝값 반복)
+  const t = (clamped - points[i][0]) / (points[i + 1][0] - points[i][0]);
+  const v0 = points[Math.max(0, i - 1)][1];
+  const v1 = points[i][1];
+  const v2 = points[i + 1][1];
+  const v3 = points[Math.min(points.length - 1, i + 2)][1];
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return 0.5 * (2 * v1 + (-v0 + v2) * t + (2 * v0 - 5 * v1 + 4 * v2 - v3) * t2 + (-v0 + 3 * v1 - 3 * v2 + v3) * t3);
+}
+
+// 펜스를 따라 그릴 각도 목록 (1.5도 간격 + 꼭짓점 + 특수 벽 경계)
+function fenceSampleDegrees(p) {
+  const list = [];
+  for (let deg = -45; deg <= 45.001; deg += 1.5) list.push(Math.round(deg * 1000) / 1000);
+  for (const pt of p.fence.points) list.push(pt[0]);
+  for (const w of p.walls) {
+    list.push(w.fromDeg);
+    list.push(w.toDeg);
+  }
+  list.sort(function (a, b) { return a - b; });
+  const unique = [];
+  for (const d of list) {
+    if (unique.length === 0 || Math.abs(d - unique[unique.length - 1]) > 0.01) unique.push(d);
+  }
+  return unique;
+}
+
+function leftLineLength(p) {
+  return p.fence.points[0][1];
+}
+function rightLineLength(p) {
+  return p.fence.points[p.fence.points.length - 1][1];
+}
+
+// 펜스 높이 (특정 구간 벽이 있으면 그 높이)
+function wallAt(deg, p) {
+  for (const w of p.walls) {
+    if (deg >= w.fromDeg && deg <= w.toDeg) return w;
+  }
+  return null;
+}
+function fenceHeightAt(deg, p) {
+  const w = wallAt(deg, p);
+  if (w) return w.height;
+  return p.fenceHeight;
+}
+
+// ---------------------------------------------------------------------
+// 관중석 안쪽 경계선: 좌익 폴 → 펜스 → 우익 폴 → 1루 파울지역 → 홈 뒤 → 3루 파울지역
+// 각 점: { x, z, kind: "fence"|"foul", deg }
+// ---------------------------------------------------------------------
+function buildBoundary(p) {
+  const points = [];
+
+  // 1) 외야 펜스
+  for (const deg of fenceSampleDegrees(p)) {
+    const pt = fieldPoint(deg, fenceDistanceAt(deg, p));
+    points.push({ x: pt.x, z: pt.z, kind: "fence", deg: deg });
+  }
+
+  // 2) 1루 쪽 파울지역 (우익 폴에서 홈 쪽으로)
+  const rightLength = rightLineLength(p);
+  const lineDir = { x: -Math.SQRT1_2, z: Math.SQRT1_2 }; // 1루선 방향
+  const outward = { x: -Math.SQRT1_2, z: -Math.SQRT1_2 }; // 1루선 바깥쪽
+  const rightSide = [];
+  for (let s = rightLength - 2; s >= 12; s -= 3) {
+    // 폴 근처는 poleFoulWidth, 홈 쪽으로 오면서 foulWidth까지 넓어짐
+    const k = Math.min(1, Math.max(0, (rightLength - s) / (rightLength - 35)));
+    const width = p.poleFoulWidth + (p.foulWidth - p.poleFoulWidth) * k;
+    rightSide.push({
+      x: lineDir.x * s + outward.x * width,
+      z: lineDir.z * s + outward.z * width,
+      kind: "foul",
+    });
+  }
+  for (const pt of rightSide) points.push(pt);
+
+  // 3) 홈 뒤 백스톱 곡선
+  const last = rightSide[rightSide.length - 1];
+  const startRadius = Math.hypot(last.x, last.z);
+  const startAngle = Math.atan2(last.x, last.z); // 장면 기준 각 (x, z)
+  const endAngle = -startAngle;
+  // startAngle은 음수(−x 쪽)… 뒤쪽(±π)을 돌아 +x 쪽으로
+  const sweepStart = startAngle;
+  const sweepEnd = startAngle < 0 ? -Math.PI * 2 - startAngle : endAngle;
+  const steps = 14;
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const a = sweepStart + (sweepEnd - sweepStart) * t;
+    const mid = 1 - Math.abs(t - 0.5) * 2; // 가운데(홈 바로 뒤)일수록 1
+    const r = startRadius + (p.backstop - startRadius) * mid;
+    points.push({ x: r * Math.sin(a), z: r * Math.cos(a), kind: "foul" });
+  }
+
+  // 4) 3루 쪽 파울지역 (홈에서 좌익 폴 쪽으로) — 좌우 길이가 다른 구장(대전)도 있어 따로 만든다
+  const leftLength = leftLineLength(p);
+  const leftSide = [];
+  for (let s = leftLength - 2; s >= 12; s -= 3) {
+    const k = Math.min(1, Math.max(0, (leftLength - s) / (leftLength - 35)));
+    const width = p.poleFoulWidth + (p.foulWidth - p.poleFoulWidth) * k;
+    leftSide.push({
+      x: Math.SQRT1_2 * s + Math.SQRT1_2 * width, // 3루선 방향 (+x) + 바깥쪽 (+x, -z)
+      z: Math.SQRT1_2 * s - Math.SQRT1_2 * width,
+      kind: "foul",
+    });
+  }
+  for (let i = leftSide.length - 1; i >= 0; i--) {
+    points.push(leftSide[i]);
+  }
+
+  // 바깥쪽 법선 계산 (경기장 중심에서 멀어지는 방향)
+  const center = { x: 0, z: 45 };
+  for (let i = 0; i < points.length; i++) {
+    const prev = points[(i - 1 + points.length) % points.length];
+    const next = points[(i + 1) % points.length];
+    const tx = next.x - prev.x;
+    const tz = next.z - prev.z;
+    const len = Math.hypot(tx, tz) || 1;
+    let nx = tz / len;
+    let nz = -tx / len;
+    if (nx * (points[i].x - center.x) + nz * (points[i].z - center.z) < 0) {
+      nx = -nx;
+      nz = -nz;
+    }
+    points[i].nx = nx;
+    points[i].nz = nz;
+  }
+  return points;
+}
+
+// 관중석 줄(row)의 안쪽 오프셋 / 높이
+const ROW_DEPTH = 0.85;
+const ROW_RISE = 0.42;
+const LOWER_ROWS = 13; // 2층 구장에서 1층 줄 수
+
+function seatRowGeometry(point, row, p) {
+  let offset;
+  let height;
+  if (point.kind === "fence") {
+    offset = 0.8 + row * ROW_DEPTH;
+    // 벽 높이가 구간마다 달라도 관중석은 기본 펜스 높이 기준 (몬스터월 뒤는 벽이 더 높게 솟음)
+    height = p.fenceHeight + p.netHeight + 0.6 + (row + 1) * ROW_RISE;
+    if (p.outfieldUpper && row >= 7) {
+      offset += 2.5; // 외야 2층
+      height += 3.5;
+    }
+  } else {
+    offset = 0.4 + row * ROW_DEPTH;
+    height = 1.3 + (row + 1) * ROW_RISE;
+    if (p.upperTier && row >= LOWER_ROWS) {
+      offset += 3.0; // 통로
+      height += 4.0; // 2층
+    }
+  }
+  return { offset: offset, height: height };
+}
+
+function rowsAt(point, p) {
+  if (point.kind === "fence") {
+    // 중앙 전광판 자리는 비움
+    const sb = p.scoreboard;
+    const halfDeg = (Math.atan2(sb.width / 2 + 3, fenceDistanceAt(sb.deg, p)) * 180) / Math.PI;
+    if (Math.abs(point.deg - sb.deg) < halfDeg) return 0;
+    // 몬스터월 구간은 벽 뒤가 불펜이라 관중석 낮게
+    if (wallAt(point.deg, p)) return Math.min(4, p.outfieldRows);
+    return p.outfieldUpper ? p.outfieldRows + 6 : p.outfieldRows;
+  }
+  return p.upperTier ? p.infieldRows + 12 : p.infieldRows;
+}
+
+// =====================================================================
+// 구장 만들기
+// =====================================================================
+function buildStadium(scene, p, homeTeam, awayTeam) {
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // ---------- 바닥 (경기장 밖 어두운 땅) ----------
+  const ground = new THREE.Mesh(
+    new THREE.CircleGeometry(400, 48),
+    new THREE.MeshLambertMaterial({ color: 0x1b2418 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.05;
+  group.add(ground);
+
+  const boundary = buildBoundary(p);
+
+  // ---------- 잔디 (경기장 전체, 줄무늬) ----------
+  const grassShape = new THREE.Shape();
+  for (let i = 0; i < boundary.length; i++) {
+    const sx = boundary[i].x;
+    const sy = -boundary[i].z; // 회전 후 z가 되도록
+    if (i === 0) grassShape.moveTo(sx, sy);
+    else grassShape.lineTo(sx, sy);
+  }
+  const grassTexture = makeStripeTexture("#2f7d3a", "#2a7134");
+  grassTexture.repeat.set(1 / 12, 1 / 12);
+  const grass = new THREE.Mesh(new THREE.ShapeGeometry(grassShape), new THREE.MeshLambertMaterial({ map: grassTexture }));
+  grass.rotation.x = -Math.PI / 2;
+  group.add(grass);
+
+  const dirtMaterial = new THREE.MeshLambertMaterial({ color: 0xa8714a });
+
+  // ---------- 워닝트랙 (펜스 안쪽 4.5m 흙길) ----------
+  const trackShape = new THREE.Shape();
+  const trackDegs = fenceSampleDegrees(p);
+  for (let i = 0; i < trackDegs.length; i++) {
+    const pt = fieldPoint(trackDegs[i], fenceDistanceAt(trackDegs[i], p));
+    if (i === 0) trackShape.moveTo(pt.x, -pt.z);
+    else trackShape.lineTo(pt.x, -pt.z);
+  }
+  for (let i = trackDegs.length - 1; i >= 0; i--) {
+    const pt = fieldPoint(trackDegs[i], fenceDistanceAt(trackDegs[i], p) - 4.5);
+    trackShape.lineTo(pt.x, -pt.z);
+  }
+  const track = new THREE.Mesh(new THREE.ShapeGeometry(trackShape), dirtMaterial);
+  track.rotation.x = -Math.PI / 2;
+  track.position.y = 0.01;
+  group.add(track);
+
+  // ---------- 내야 흙 (투수판 중심 반지름 29m 호 + 파울라인) ----------
+  const infieldShape = new THREE.Shape();
+  const arcRadius = 29;
+  // 1루선과 호의 교점: s² - 2s(d·M) + |M|² - r² = 0
+  const dDotM = MOUND_DIST * Math.SQRT1_2;
+  const sCross = dDotM + Math.sqrt(dDotM * dDotM - (MOUND_DIST * MOUND_DIST - arcRadius * arcRadius));
+  const crossFirst = { x: -sCross * Math.SQRT1_2, z: sCross * Math.SQRT1_2 };
+  infieldShape.moveTo(0, 0);
+  infieldShape.lineTo(crossFirst.x, -crossFirst.z);
+  // 호를 1루 교점에서 2루 뒤를 지나 3루 교점까지 그린다 (투수판 중심, x-z 평면 각도)
+  const startA = Math.atan2(crossFirst.z - MOUND_DIST, crossFirst.x); // 1루 쪽 (x 음수 → 90°보다 큰 각)
+  const endA = Math.atan2(crossFirst.z - MOUND_DIST, -crossFirst.x); // 3루 쪽 (90°보다 작은 각)
+  for (let i = 0; i <= 40; i++) {
+    const a = startA + ((endA - startA) * i) / 40;
+    const x = Math.cos(a) * arcRadius;
+    const z = MOUND_DIST + Math.sin(a) * arcRadius;
+    infieldShape.lineTo(x, -z);
+  }
+  infieldShape.lineTo(0, 0);
+  const infieldDirt = new THREE.Mesh(new THREE.ShapeGeometry(infieldShape), dirtMaterial);
+  infieldDirt.rotation.x = -Math.PI / 2;
+  infieldDirt.position.y = 0.02;
+  group.add(infieldDirt);
+
+  // ---------- 내야 잔디 (다이아몬드 안쪽) ----------
+  const centerZ = HALF_DIAG;
+  const shrink = 0.84;
+  const diamond = [
+    { x: 0, z: centerZ + (0 - centerZ) * shrink },
+    { x: FIRST_BASE.x * shrink, z: centerZ },
+    { x: 0, z: centerZ + (SECOND_BASE.z - centerZ) * shrink },
+    { x: THIRD_BASE.x * shrink, z: centerZ },
+  ];
+  const diamondShape = new THREE.Shape();
+  diamondShape.moveTo(diamond[0].x, -diamond[0].z);
+  for (let i = 1; i < diamond.length; i++) diamondShape.lineTo(diamond[i].x, -diamond[i].z);
+  diamondShape.lineTo(diamond[0].x, -diamond[0].z);
+  const infieldGrass = new THREE.Mesh(new THREE.ShapeGeometry(diamondShape), new THREE.MeshLambertMaterial({ map: grassTexture }));
+  infieldGrass.rotation.x = -Math.PI / 2;
+  infieldGrass.position.y = 0.03;
+  group.add(infieldGrass);
+
+  // ---------- 홈 주변 흙 원, 마운드 ----------
+  const homeCircle = new THREE.Mesh(new THREE.CircleGeometry(4.0, 32), dirtMaterial);
+  homeCircle.rotation.x = -Math.PI / 2;
+  homeCircle.position.set(0, 0.04, 0.3);
+  group.add(homeCircle);
+
+  const mound = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 2.74, 0.25, 32), dirtMaterial);
+  mound.position.set(0, 0.125, MOUND_DIST - 0.4);
+  group.add(mound);
+  const rubber = new THREE.Mesh(new THREE.BoxGeometry(0.61, 0.03, 0.15), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  rubber.position.set(0, 0.26, MOUND_DIST);
+  group.add(rubber);
+
+  // ---------- 베이스, 홈플레이트 ----------
+  const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const bases = [FIRST_BASE, SECOND_BASE, THIRD_BASE];
+  for (const b of bases) {
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.08, 0.38), whiteMaterial);
+    bag.position.set(b.x, 0.06, b.z);
+    bag.rotation.y = Math.PI / 4;
+    group.add(bag);
+  }
+  // 홈플레이트 (오각형, 뒤 꼭짓점이 원점)
+  const plateShape = new THREE.Shape();
+  plateShape.moveTo(0, 0);
+  plateShape.lineTo(0.216, -0.216);
+  plateShape.lineTo(0.216, -0.432);
+  plateShape.lineTo(-0.216, -0.432);
+  plateShape.lineTo(-0.216, -0.216);
+  plateShape.lineTo(0, 0);
+  const plate = new THREE.Mesh(new THREE.ShapeGeometry(plateShape), whiteMaterial);
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.y = 0.05;
+  group.add(plate);
+
+  // ---------- 파울라인 ----------
+  for (const sign of [-1, 1]) {
+    const length = sign < 0 ? rightLineLength(p) : leftLineLength(p); // sign -1 = 1루(−x)
+    const line = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, length), whiteMaterial);
+    line.position.set((sign * length * Math.SQRT1_2) / 2, 0.05, (length * Math.SQRT1_2) / 2);
+    line.rotation.y = sign < 0 ? -Math.PI / 4 : Math.PI / 4;
+    group.add(line);
+  }
+  // 타석 박스 (선만)
+  for (const side of [-1, 1]) {
+    const box = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.22, 0.001, 1.83)),
+      new THREE.LineBasicMaterial({ color: 0xffffff })
+    );
+    box.position.set(side * 0.96, 0.06, 0.2);
+    group.add(box);
+  }
+
+  // ---------- 외야 펜스 ----------
+  const fenceGroup = buildFence(p);
+  group.add(fenceGroup);
+
+  // ---------- 관중석 + 관중 ----------
+  const standsResult = buildStands(boundary, p, homeTeam, awayTeam);
+  group.add(standsResult.mesh);
+  group.add(standsResult.crowdBodies);
+  group.add(standsResult.crowdHeads);
+
+  // ---------- 더그아웃 (1루/3루) ----------
+  for (const sign of [-1, 1]) {
+    const dugout = new THREE.Mesh(
+      new THREE.BoxGeometry(14, 2.4, 3),
+      new THREE.MeshLambertMaterial({ color: 0x2a2f38 })
+    );
+    const along = 20;
+    const out = p.foulWidth - 1;
+    dugout.position.set(sign * (along * Math.SQRT1_2 + out * Math.SQRT1_2), 0.4, along * Math.SQRT1_2 - out * Math.SQRT1_2);
+    // 긴 변(x축)이 파울라인과 나란하도록
+    dugout.rotation.y = sign < 0 ? Math.PI / 4 : -Math.PI / 4;
+    group.add(dugout);
+  }
+
+  // ---------- 전광판 (구장별 크기·위치) ----------
+  const sbp = p.scoreboard;
+  const scoreboard = createScoreboard(sbp.width, sbp.height);
+  const sbDist = fenceDistanceAt(sbp.deg, p) + 16;
+  const sbPos = fieldPoint(sbp.deg, sbDist);
+  const sbY = Math.max(17, sbp.height / 2 + 9);
+  scoreboard.mesh.position.set(sbPos.x, sbY, sbPos.z);
+  scoreboard.mesh.lookAt(0, sbY, 0);
+  group.add(scoreboard.mesh);
+  const frameMaterial = new THREE.MeshLambertMaterial({ color: sbp.style === "fortress" ? 0x8a7f6e : 0x15181d });
+  const sbFrame = new THREE.Mesh(new THREE.BoxGeometry(sbp.width + 2, sbp.height + 1.5, 1.5), frameMaterial);
+  const back = fieldPoint(sbp.deg, sbDist + 0.9);
+  sbFrame.position.set(back.x, sbY, back.z);
+  sbFrame.lookAt(0, sbY, 0);
+  group.add(sbFrame);
+  const sbLegs = new THREE.Mesh(new THREE.BoxGeometry(Math.min(8, sbp.width / 4), sbY - sbp.height / 2, 1.5), frameMaterial);
+  sbLegs.position.set(back.x, (sbY - sbp.height / 2) / 2, back.z);
+  sbLegs.lookAt(0, sbLegs.position.y, 0);
+  group.add(sbLegs);
+  if (sbp.style === "fortress") {
+    // 수원 화성 성곽 모양: 위에 여장(톱니), 양옆에 망루
+    const merlonCount = Math.floor((sbp.width + 2) / 2.2);
+    for (let i = 0; i < merlonCount; i++) {
+      const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.4, 1.6), frameMaterial);
+      merlon.position.set(-(sbp.width + 2) / 2 + 1.1 + i * 2.2, sbp.height / 2 + 1.4, 0);
+      sbFrame.add(merlon);
+    }
+    for (const side of [-1, 1]) {
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(3.5, sbp.height + 6, 3.5), frameMaterial);
+      tower.position.set(side * (sbp.width / 2 + 2.5), 1.5, 0);
+      sbFrame.add(tower);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(3.4, 2.6, 4), new THREE.MeshLambertMaterial({ color: 0x3b3b3b }));
+      roof.position.set(side * (sbp.width / 2 + 2.5), sbp.height / 2 + 6, 0);
+      roof.rotation.y = Math.PI / 4;
+      sbFrame.add(roof);
+    }
+  }
+
+  // ---------- 조명탑 ----------
+  addLightTowers(group, boundary, p);
+
+  // ---------- 돔 지붕 ----------
+  if (p.roof) {
+    const dome = new THREE.Mesh(
+      new THREE.SphereGeometry(175, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2.6),
+      new THREE.MeshLambertMaterial({ color: 0xc9ced6, side: THREE.BackSide })
+    );
+    dome.position.set(0, -55, 50);
+    group.add(dome);
+  }
+
+  return {
+    group: group,
+    boundary: boundary,
+    scoreboard: scoreboard,
+    crowd: standsResult,
+  };
+}
+
+function makeStripeTexture(colorA, colorB) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = colorA;
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.fillStyle = colorB;
+  ctx.fillRect(0, 0, 64, 32);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function buildFence(p) {
+  const fenceGroup = new THREE.Group();
+  const degs = fenceSampleDegrees(p);
+
+  // 색이 다른 구간(몬스터월 등)은 따로 모아서 그린다
+  const wallBuckets = {}; // 색 → 삼각형 좌표
+  const topPositions = [];
+  const netPositions = [];
+
+  function pushWallQuad(bucket, a, b, ya0, ya1, yb0, yb1) {
+    bucket.push(a.x, ya0, a.z, b.x, yb0, b.z, b.x, yb1, b.z);
+    bucket.push(a.x, ya0, a.z, b.x, yb1, b.z, a.x, ya1, a.z);
+  }
+
+  for (let i = 0; i < degs.length - 1; i++) {
+    const da = degs[i];
+    const db = degs[i + 1];
+    const mid = (da + db) / 2;
+    const wall = wallAt(mid, p);
+    const color = wall && wall.color ? wall.color : p.fenceColor;
+    if (!wallBuckets[color]) wallBuckets[color] = [];
+
+    const a = fieldPoint(da, fenceDistanceAt(da, p));
+    const b = fieldPoint(db, fenceDistanceAt(db, p));
+    const h = wall ? wall.height : p.fenceHeight;
+    pushWallQuad(wallBuckets[color], a, b, 0, h, 0, h);
+    // 위쪽 홈런 라인 띠
+    pushWallQuad(topPositions, a, b, h - 0.25, h, h - 0.25, h);
+    // 철망 (사직)
+    if (p.netHeight > 0 && !wall) {
+      pushWallQuad(netPositions, a, b, h, h + p.netHeight, h, h + p.netHeight);
+    }
+  }
+
+  for (const color of Object.keys(wallBuckets)) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(wallBuckets[color], 3));
+    geometry.computeVertexNormals();
+    fenceGroup.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide })));
+  }
+
+  const topGeometry = new THREE.BufferGeometry();
+  topGeometry.setAttribute("position", new THREE.Float32BufferAttribute(topPositions, 3));
+  fenceGroup.add(new THREE.Mesh(topGeometry, new THREE.MeshBasicMaterial({ color: p.homeRunLineColor, side: THREE.DoubleSide })));
+
+  if (netPositions.length > 0) {
+    const netGeometry = new THREE.BufferGeometry();
+    netGeometry.setAttribute("position", new THREE.Float32BufferAttribute(netPositions, 3));
+    fenceGroup.add(new THREE.Mesh(netGeometry, new THREE.MeshBasicMaterial({
+      color: 0x9aa3ad, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false,
+    })));
+  }
+
+  // 특수 벽(몬스터월) 표면: 미디어글라스처럼 빛나는 패널 + 위쪽 라인
+  for (const w of p.walls) {
+    const steps = 12;
+    const panelPositions = [];
+    for (let i = 0; i < steps; i++) {
+      const da = w.fromDeg + ((w.toDeg - w.fromDeg) * i) / steps;
+      const db = w.fromDeg + ((w.toDeg - w.fromDeg) * (i + 1)) / steps;
+      const a = fieldPoint(da, fenceDistanceAt(da, p) - 0.05);
+      const b = fieldPoint(db, fenceDistanceAt(db, p) - 0.05);
+      pushWallQuad(panelPositions, a, b, w.height * 0.35, w.height * 0.9, w.height * 0.35, w.height * 0.9);
+    }
+    const panelGeometry = new THREE.BufferGeometry();
+    panelGeometry.setAttribute("position", new THREE.Float32BufferAttribute(panelPositions, 3));
+    fenceGroup.add(new THREE.Mesh(panelGeometry, new THREE.MeshBasicMaterial({ color: 0x1d4e89, side: THREE.DoubleSide })));
+  }
+
+  // 폴대
+  for (const deg of [-45, 45]) {
+    const pt = fieldPoint(deg, fenceDistanceAt(deg, p));
+    const poleHeight = fenceHeightAt(deg, p) + p.netHeight + 18;
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.25, poleHeight, 8),
+      new THREE.MeshBasicMaterial({ color: 0xf2c200 })
+    );
+    pole.position.set(pt.x, poleHeight / 2, pt.z);
+    fenceGroup.add(pole);
+  }
+  return fenceGroup;
+}
+
+// ---------------------------------------------------------------------
+// 관중석(계단식) + 관중(InstancedMesh)
+// ---------------------------------------------------------------------
+function buildStands(boundary, p, homeTeam, awayTeam) {
+  const positions = [];
+  const colors = [];
+  const seatA = new THREE.Color(p.seatColorA);
+  const seatB = new THREE.Color(p.seatColorB);
+  const concrete = new THREE.Color("#5b5f66");
+  const crowdSpots = [];
+
+  function pushQuad(a, b, c, d, color) {
+    // a-b-c, a-c-d
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    positions.push(a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z);
+    for (let k = 0; k < 6; k++) colors.push(color.r, color.g, color.b);
+  }
+  function offsetPoint(pt, offset, y) {
+    return { x: pt.x + pt.nx * offset, y: y, z: pt.z + pt.nz * offset };
+  }
+
+  for (let i = 0; i < boundary.length; i++) {
+    const pa = boundary[i];
+    const pb = boundary[(i + 1) % boundary.length];
+    const rows = Math.min(rowsAt(pa, p), rowsAt(pb, p));
+    if (rows === 0) continue;
+
+    let prevA = { offset: pa.kind === "fence" ? 0.8 : 0.4, height: 0 };
+    let prevB = { offset: pb.kind === "fence" ? 0.8 : 0.4, height: 0 };
+
+    for (let row = 0; row < rows; row++) {
+      const ga = seatRowGeometry(pa, row, p);
+      const gb = seatRowGeometry(pb, row, p);
+
+      // 2층 시작: 통로 바닥
+      if (ga.offset - prevA.offset > ROW_DEPTH + 0.1) {
+        pushQuad(
+          offsetPoint(pa, prevA.offset, prevA.height), offsetPoint(pb, prevB.offset, prevB.height),
+          offsetPoint(pb, gb.offset, prevB.height), offsetPoint(pa, ga.offset, prevA.height), concrete
+        );
+      }
+      // 계단 앞면(수직)
+      pushQuad(
+        offsetPoint(pa, ga.offset, prevA.height), offsetPoint(pb, gb.offset, prevB.height),
+        offsetPoint(pb, gb.offset, gb.height), offsetPoint(pa, ga.offset, ga.height), concrete
+      );
+      // 좌석 바닥(수평)
+      const seatColor = row % 2 === 0 ? seatA : seatB;
+      pushQuad(
+        offsetPoint(pa, ga.offset, ga.height), offsetPoint(pb, gb.offset, gb.height),
+        offsetPoint(pb, gb.offset + ROW_DEPTH, gb.height), offsetPoint(pa, ga.offset + ROW_DEPTH, ga.height), seatColor
+      );
+
+      // 관중 자리 후보 (0.62m 간격)
+      const segLength = Math.hypot(pb.x - pa.x, pb.z - pa.z);
+      const count = Math.floor(segLength / 0.62);
+      for (let k = 0; k < count; k++) {
+        const t = (k + 0.5) / count;
+        const x = pa.x + (pb.x - pa.x) * t + (pa.nx + (pb.nx - pa.nx) * t) * ((ga.offset + gb.offset) / 2 + 0.45);
+        const z = pa.z + (pb.z - pa.z) * t + (pa.nz + (pb.nz - pa.nz) * t) * ((ga.offset + gb.offset) / 2 + 0.45);
+        const y = ga.height + (gb.height - ga.height) * t;
+        crowdSpots.push({ x: x, y: y, z: z, outfield: pa.kind === "fence" });
+      }
+
+      prevA = { offset: ga.offset + ROW_DEPTH, height: ga.height };
+      prevB = { offset: gb.offset + ROW_DEPTH, height: gb.height };
+    }
+
+    // 맨 뒤 벽
+    pushQuad(
+      offsetPoint(pa, prevA.offset, prevA.height), offsetPoint(pb, prevB.offset, prevB.height),
+      offsetPoint(pb, prevB.offset, prevB.height + 3.5), offsetPoint(pa, prevA.offset, prevA.height + 3.5), concrete
+    );
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
+
+  // ---------- 관중 ----------
+  const isMobile = window.matchMedia("(pointer: coarse)").matches;
+  const maxCrowd = isMobile ? 3500 : 7000;
+
+  // 밀도: 내야 80%, 외야 55%
+  const chosen = [];
+  for (const spot of crowdSpots) {
+    const density = spot.outfield ? 0.55 : 0.8;
+    if (Math.random() < density) chosen.push(spot);
+  }
+  // 너무 많으면 무작위로 줄임
+  while (chosen.length > maxCrowd) {
+    const idx = Math.floor(Math.random() * chosen.length);
+    chosen[idx] = chosen[chosen.length - 1];
+    chosen.pop();
+  }
+
+  const bodyGeometry = new THREE.BoxGeometry(0.42, 0.62, 0.3);
+  bodyGeometry.translate(0, 0.31, 0);
+  const headGeometry = new THREE.SphereGeometry(0.12, 6, 5);
+  headGeometry.translate(0, 0.75, 0);
+  const crowdBodies = new THREE.InstancedMesh(bodyGeometry, new THREE.MeshLambertMaterial(), chosen.length);
+  const crowdHeads = new THREE.InstancedMesh(headGeometry, new THREE.MeshLambertMaterial({ color: 0xe0b48a }), chosen.length);
+
+  const homeColor = new THREE.Color(homeTeam.color);
+  const awayColor = new THREE.Color(awayTeam.color);
+  const white = new THREE.Color("#e8e8e8");
+  const gray = new THREE.Color("#55595f");
+  const dummy = new THREE.Object3D();
+
+  for (let i = 0; i < chosen.length; i++) {
+    const spot = chosen[i];
+    dummy.position.set(spot.x, spot.y, spot.z);
+    dummy.lookAt(0, spot.y, 40);
+    dummy.updateMatrix();
+    crowdBodies.setMatrixAt(i, dummy.matrix);
+    crowdHeads.setMatrixAt(i, dummy.matrix);
+
+    // 응원석 쪽: 홈 응원석이 1루(−x)면 x<0 쪽이 홈팀 색 위주
+    const onHomeSide = p.homeSide === "1루" ? spot.x < 0 : spot.x > 0;
+    const r = Math.random();
+    let color;
+    if (onHomeSide) {
+      if (r < 0.6) color = homeColor;
+      else if (r < 0.75) color = awayColor;
+      else if (r < 0.9) color = white;
+      else color = gray;
+    } else {
+      if (r < 0.55) color = awayColor;
+      else if (r < 0.7) color = homeColor;
+      else if (r < 0.88) color = white;
+      else color = gray;
+    }
+    crowdBodies.setColorAt(i, color);
+  }
+  crowdBodies.instanceMatrix.needsUpdate = true;
+  if (crowdBodies.instanceColor) crowdBodies.instanceColor.needsUpdate = true;
+
+  return { mesh: mesh, crowdBodies: crowdBodies, crowdHeads: crowdHeads, spots: chosen };
+}
+
+function addLightTowers(group, boundary, p) {
+  const poleMaterial = new THREE.MeshLambertMaterial({ color: 0x3a3e45 });
+  const lampMaterial = new THREE.MeshBasicMaterial({ color: 0xfff6dc });
+  // 펜스 ±32도, 내야 양쪽 파울지역 중간쯤
+  const targets = [];
+  for (const deg of [-32, 32]) {
+    const pt = fieldPoint(deg, fenceDistanceAt(deg, p));
+    targets.push(pt);
+  }
+  for (const sign of [-1, 1]) {
+    targets.push({ x: sign * 45, z: 18 });
+    targets.push({ x: sign * 28, z: -14 });
+  }
+
+  for (const target of targets) {
+    // 경계선에서 가장 가까운 점을 찾아 그 바깥쪽에 세운다
+    let best = boundary[0];
+    let bestD = Infinity;
+    for (const b of boundary) {
+      const d = (b.x - target.x) ** 2 + (b.z - target.z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = b;
+      }
+    }
+    const rows = rowsAt(best, p);
+    const last = seatRowGeometry(best, Math.max(0, rows - 1), p);
+    const out = last.offset + 3;
+    const x = best.x + best.nx * out;
+    const z = best.z + best.nz * out;
+    const height = 46;
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, height, 8), poleMaterial);
+    pole.position.set(x, height / 2, z);
+    group.add(pole);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(9, 5, 0.6), lampMaterial);
+    lamp.position.set(x, height + 2, z);
+    lamp.lookAt(0, 0, 40);
+    group.add(lamp);
+  }
+}
+
+// ---------------------------------------------------------------------
+// 전광판 (캔버스 텍스처)
+// ---------------------------------------------------------------------
+function createScoreboard(width, height) {
+  const canvas = document.createElement("canvas");
+  // 전광판 비율에 맞춰 캔버스 크기 (글자는 drawScoreboard가 가운데 정렬로 그림)
+  canvas.height = 512;
+  canvas.width = Math.round(Math.max(1152, (512 * width) / height));
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture }));
+  return { canvas: canvas, texture: texture, mesh: mesh };
+}
+
+function drawScoreboard(scoreboard, view) {
+  // view: { awayName, homeName, line: {away:[], home:[]}, totals, bso, pitcherText, batterText, pitchText }
+  const ctx = scoreboard.canvas.getContext("2d");
+  const fullW = scoreboard.canvas.width;
+  const H = scoreboard.canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "#05070a";
+  ctx.fillRect(0, 0, fullW, H);
+  // 넓은 전광판(인천 빅보드 등)은 가운데 1152px 영역에 그리고 양옆은 광고 띠
+  const W = 1152;
+  const offsetX = Math.round((fullW - W) / 2);
+  if (offsetX > 0) {
+    ctx.fillStyle = "#101826";
+    ctx.fillRect(0, 0, offsetX - 8, H);
+    ctx.fillRect(offsetX + W + 8, 0, offsetX - 8, H);
+  }
+  ctx.translate(offsetX, 0);
+
+  const innings = Math.max(9, view.line.away.length, view.line.home.length);
+  const nameW = 170;
+  const cellW = Math.min(56, (W - nameW - 4 * 66 - 20) / innings);
+  const rowH = 70;
+  const top = 20;
+
+  ctx.font = "bold 34px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // 머리줄
+  ctx.fillStyle = "#9aa4b2";
+  for (let i = 0; i < innings; i++) {
+    ctx.fillText(String(i + 1), nameW + cellW * i + cellW / 2, top + rowH / 2);
+  }
+  const totalsX = nameW + cellW * innings + 20;
+  const totalLabels = ["R", "H", "E", "B"];
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = i === 0 ? "#ffd84d" : "#9aa4b2";
+    ctx.fillText(totalLabels[i], totalsX + 66 * i + 33, top + rowH / 2);
+  }
+
+  // 팀 줄
+  const rows = [
+    { name: view.awayName, line: view.line.away, totals: view.totals.away },
+    { name: view.homeName, line: view.line.home, totals: view.totals.home },
+  ];
+  for (let r = 0; r < 2; r++) {
+    const y = top + rowH * (r + 1) + rowH / 2;
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "left";
+    ctx.fillText(rows[r].name, 20, y);
+    ctx.textAlign = "center";
+    for (let i = 0; i < innings; i++) {
+      const v = rows[r].line[i];
+      ctx.fillStyle = "#e8ecf2";
+      ctx.fillText(v === undefined ? "" : String(v), nameW + cellW * i + cellW / 2, y);
+    }
+    for (let i = 0; i < 4; i++) {
+      ctx.fillStyle = i === 0 ? "#ffd84d" : "#e8ecf2";
+      ctx.fillText(String(rows[r].totals[i]), totalsX + 66 * i + 33, y);
+    }
+  }
+
+  // B S O
+  const bsoTop = top + rowH * 3 + 30;
+  const dot = function (x, y, on, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, 15, 0, Math.PI * 2);
+    ctx.fillStyle = on ? color : "#2a2f37";
+    ctx.fill();
+  };
+  ctx.textAlign = "left";
+  ctx.font = "bold 32px sans-serif";
+  const bsoRows = [
+    { label: "B", count: view.bso.ball, max: 3, color: "#3fd46b" },
+    { label: "S", count: view.bso.strike, max: 2, color: "#ffd84d" },
+    { label: "O", count: view.bso.out, max: 2, color: "#ff4d4f" },
+  ];
+  for (let r = 0; r < 3; r++) {
+    const y = bsoTop + r * 44;
+    ctx.fillStyle = "#9aa4b2";
+    ctx.fillText(bsoRows[r].label, 24, y);
+    for (let i = 0; i < bsoRows[r].max; i++) {
+      dot(80 + i * 40, y, i < bsoRows[r].count, bsoRows[r].color);
+    }
+  }
+
+  // 투수 / 타자
+  ctx.font = "bold 36px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(view.pitcherText, 260, bsoTop);
+  ctx.fillText(view.batterText, 260, bsoTop + 50);
+  ctx.fillStyle = "#ffd84d";
+  ctx.font = "bold 44px sans-serif";
+  ctx.fillText(view.pitchText, 260, bsoTop + 104);
+
+  scoreboard.texture.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------------
+// 선수 모형 (관절 있는 단순 휴머노이드 — 애니메이션은 3단계)
+// ---------------------------------------------------------------------
+function makeLabelTexture(text, options) {
+  const opts = options || {};
+  const canvas = document.createElement("canvas");
+  canvas.width = opts.width || 256;
+  canvas.height = opts.height || 64;
+  const ctx = canvas.getContext("2d");
+  if (opts.background) {
+    ctx.fillStyle = opts.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.fillStyle = opts.color || "#ffffff";
+  ctx.font = "bold " + (opts.fontSize || 34) + "px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const lines = String(text).split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const y = canvas.height / 2 + (i - (lines.length - 1) / 2) * (opts.fontSize || 34) * 1.1;
+    ctx.fillText(lines[i], canvas.width / 2, y);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createPlayerFigure(info) {
+  // info: { jerseyColor, pantsColor, capColor, number, name }
+  const group = new THREE.Group();
+  const jersey = new THREE.MeshLambertMaterial({ color: info.jerseyColor });
+  const pants = new THREE.MeshLambertMaterial({ color: info.pantsColor });
+  const cap = new THREE.MeshLambertMaterial({ color: info.capColor });
+  const skin = new THREE.MeshLambertMaterial({ color: 0xd9a77c });
+
+  // 다리
+  for (const side of [-1, 1]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.86, 0.19), pants);
+    leg.position.set(side * 0.11, 0.43, 0);
+    group.add(leg);
+  }
+  // 몸통
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.64, 0.27), jersey);
+  torso.position.set(0, 1.18, 0);
+  group.add(torso);
+  // 팔
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 0.13), jersey);
+    arm.position.set(side * 0.31, 1.15, 0);
+    group.add(arm);
+  }
+  // 머리 + 모자
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.125, 12, 10), skin);
+  head.position.set(0, 1.64, 0);
+  group.add(head);
+  const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.133, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), cap);
+  capTop.position.set(0, 1.67, 0);
+  group.add(capTop);
+  const brim = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.12), cap);
+  brim.position.set(0, 1.68, 0.15);
+  group.add(brim);
+
+  // 등번호 + 이름 (등 쪽 = -z)
+  const backTexture = makeLabelTexture(info.name + "\n" + info.number, {
+    width: 128, height: 128, fontSize: 40, color: info.numberColor || "#ffffff",
+  });
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: backTexture, transparent: true }));
+  back.position.set(0, 1.2, -0.14);
+  back.rotation.y = Math.PI;
+  group.add(back);
+
+  // 머리 위 이름표
+  const label = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: makeLabelTexture(info.number + " " + info.name, { background: "rgba(0,0,0,0.55)", fontSize: 32 }), depthTest: false })
+  );
+  label.scale.set(2.4, 0.6, 1);
+  label.position.set(0, 2.35, 0);
+  label.renderOrder = 10;
+  group.add(label);
+
+  group.userData.label = label;
+  return group;
+}
+
+// 수비 위치 → 좌표 (기본 위치)
+function defensePosition(posNo, p) {
+  switch (Number(posNo)) {
+    case 1: // 투수
+      return { x: 0, y: 0.25, z: MOUND_DIST };
+    case 2: // 포수
+      return { x: 0, y: 0, z: -0.9 };
+    case 3: // 1루수 — 베이스 뒤, 살짝 안쪽
+      return { x: FIRST_BASE.x - 1.4, y: 0, z: FIRST_BASE.z + 4.2 };
+    case 4: // 2루수
+      return { x: -8.5, y: 0, z: 33 };
+    case 5: // 3루수
+      return { x: THIRD_BASE.x + 1.4, y: 0, z: THIRD_BASE.z + 4.2 };
+    case 6: // 유격수
+      return { x: 8.5, y: 0, z: 33 };
+    case 7: { // 좌익수
+      const pt = fieldPoint(-27, fenceDistanceAt(-27, p) * 0.72);
+      return { x: pt.x, y: 0, z: pt.z };
+    }
+    case 8: { // 중견수
+      const pt = fieldPoint(0, fenceDistanceAt(0, p) * 0.74);
+      return { x: pt.x, y: 0, z: pt.z };
+    }
+    case 9: { // 우익수
+      const pt = fieldPoint(27, fenceDistanceAt(27, p) * 0.72);
+      return { x: pt.x, y: 0, z: pt.z };
+    }
+    default:
+      return null; // 지명타자 등은 수비 안 함
+  }
+}
+
+function positionName(posNo) {
+  switch (Number(posNo)) {
+    case 1: return "투수";
+    case 2: return "포수";
+    case 3: return "1루수";
+    case 4: return "2루수";
+    case 5: return "3루수";
+    case 6: return "유격수";
+    case 7: return "좌익수";
+    case 8: return "중견수";
+    case 9: return "우익수";
+    case 0: return "지명타자";
+    default: return "";
+  }
+}
+
+// "우투좌타" → 타석 방향 L/R, "우언우타" → 던지는 손 R
+function battingSide(hitType, pitcherThrows) {
+  const text = String(hitType || "");
+  if (text.indexOf("좌타") !== -1) return "L";
+  if (text.indexOf("우타") !== -1) return "R";
+  if (text.indexOf("양타") !== -1) return pitcherThrows === "L" ? "R" : "L"; // 스위치: 투수 반대쪽
+  return "R";
+}
+function throwingHand(hitType) {
+  const text = String(hitType || "");
+  if (text.charAt(0) === "좌") return "L";
+  return "R";
+}
+
+// 팀별 유니폼 색 (홈 = 흰 유니폼, 원정 = 팀 컬러 유니폼)
+function uniformFor(team, isHome) {
+  if (isHome) {
+    return { jerseyColor: "#f2f2f2", pantsColor: "#f2f2f2", capColor: team.color, numberColor: team.color };
+  }
+  return { jerseyColor: team.color, pantsColor: "#9aa0a8", capColor: team.color, numberColor: "#ffffff" };
+}
+
+// =====================================================================
+// 문자중계 → 재생용 데이터
+// =====================================================================
+function toInt(v) {
+  const n = parseInt(v, 10);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseGameData(data) {
+  const game = data.game || {};
+  const events = [];
+  const seen = {};
+  const ptsById = {};
+  let lastTrd = null;
+
+  const innings = Array.isArray(data.innings) ? data.innings : [];
+  for (const block of innings) {
+    const trd = block.result ? block.result.textRelayData : null;
+    if (!trd) continue;
+    lastTrd = trd;
+    for (const relay of trd.textRelays || []) {
+      for (const pts of relay.ptsOptions || []) {
+        ptsById[pts.pitchId] = pts;
+      }
+      for (const opt of relay.textOptions || []) {
+        if (seen[opt.seqno]) continue;
+        seen[opt.seqno] = true;
+        events.push(makeEvent(relay, opt));
+      }
+    }
+  }
+  events.sort(function (a, b) {
+    return a.seqno - b.seqno;
+  });
+
+  // 선수 사전 (pcode → 정보)
+  const players = {};
+  function addPlayers(list, team, kind) {
+    for (const pl of list || []) {
+      if (!pl.pcode) continue;
+      const existing = players[pl.pcode] || {};
+      players[pl.pcode] = Object.assign(existing, {
+        pcode: String(pl.pcode),
+        name: pl.name,
+        backnum: pl.backnum || existing.backnum || "",
+        hitType: pl.hitType || pl.hittype || existing.hitType || "",
+        pos: pl.pos !== undefined ? pl.pos : existing.pos,
+        posName: pl.posName || existing.posName || "",
+        batOrder: pl.batOrder !== undefined ? pl.batOrder : existing.batOrder,
+        seqno: pl.seqno !== undefined ? pl.seqno : existing.seqno,
+        team: team,
+        kind: kind,
+      });
+    }
+  }
+  if (lastTrd) {
+    addPlayers((lastTrd.homeLineup || {}).batter, "home", "batter");
+    addPlayers((lastTrd.homeLineup || {}).pitcher, "home", "pitcher");
+    addPlayers((lastTrd.awayLineup || {}).batter, "away", "batter");
+    addPlayers((lastTrd.awayLineup || {}).pitcher, "away", "pitcher");
+  }
+
+  return {
+    game: game,
+    events: events,
+    ptsById: ptsById,
+    players: players,
+    lineups: lastTrd
+      ? { home: lastTrd.homeLineup || {}, away: lastTrd.awayLineup || {} }
+      : { home: {}, away: {} },
+  };
+}
+
+function makeEvent(relay, opt) {
+  const gs = opt.currentGameState || {};
+  return {
+    seqno: Number(opt.seqno),
+    type: Number(opt.type),
+    text: opt.text || "",
+    inning: Number(relay.inn),
+    half: String(relay.homeOrAway) === "1" ? "bot" : "top",
+    gs: {
+      homeScore: toInt(gs.homeScore), awayScore: toInt(gs.awayScore),
+      homeHit: toInt(gs.homeHit), awayHit: toInt(gs.awayHit),
+      homeError: toInt(gs.homeError), awayError: toInt(gs.awayError),
+      homeBallFour: toInt(gs.homeBallFour), awayBallFour: toInt(gs.awayBallFour),
+      ball: toInt(gs.ball), strike: toInt(gs.strike), out: toInt(gs.out),
+      base1: toInt(gs.base1), base2: toInt(gs.base2), base3: toInt(gs.base3), // 타순 번호 (0 = 없음)
+      pitcher: String(gs.pitcher || ""), batter: String(gs.batter || ""),
+    },
+    pitchResult: opt.pitchResult || null,
+    stuff: opt.stuff || "",
+    speed: opt.speed || "",
+    pitchNum: opt.pitchNum || null,
+    ptsPitchId: opt.ptsPitchId || null,
+    batterRecord: opt.batterRecord || null,
+    playerChange: opt.playerChange || null,
+  };
+}
+
+// 팀의 타순 → 그 시점 타자 (가장 최근에 들어온 선수 = seqno 큰 쪽이 아니라, 지금 게임 상태의 batter와 맞춰 쓰는 게 정확.
+// 여기서는 주자 표시용으로 "그 타순의 선발"을 기본, 이후 타석에 나온 선수로 갱신)
+function starterAtOrder(lineup, order) {
+  let best = null;
+  for (const b of lineup.batter || []) {
+    if (Number(b.batOrder) !== Number(order)) continue;
+    if (!best || Number(b.seqno) < Number(best.seqno)) best = b;
+  }
+  return best;
+}
+
+// =====================================================================
+// 입장 화면 컨트롤러
+// =====================================================================
+const gv = {
+  open: false,
+  renderer: null,
+  scene: null,
+  camera: null,
+  stadium: null,
+  params: null,
+  model: null, // parseGameData 결과
+  gameId: null,
+  mode: "replay", // replay | live
+  idx: -1,
+  playing: false,
+  speed: 1,
+  eventTime: 0,
+  eventDuration: 0,
+  homeTeam: null,
+  awayTeam: null,
+  defenseKey: "",
+  defenseFigures: [],
+  batterFigure: null,
+  batterKey: "",
+  runnerFigures: [null, null, null],
+  runnerKeys: ["", "", ""],
+  umpire: null,
+  ball: null,
+  cam: { x: 0, y: 10, z: -20, yaw: 0, pitch: 0, fov: 55, preset: "" },
+  labelsVisible: true,
+  cheerTime: 0,
+  clock: 0,
+  lastFrame: 0,
+  pollTimer: null,
+  toastTimer: null,
+  gyro: { on: false, baseAlpha: null, baseBeta: null, baseGamma: null, yaw0: 0, pitch0: 0 },
+};
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+// ---------------------------------------------------------------------
+// 열기 / 닫기
+// ---------------------------------------------------------------------
+async function openGameView(gameId, mode) {
+  showGameViewShell();
+  setLoading("문자중계 전체 받는 중… (몇 초 걸림)");
+  let data;
+  try {
+    data = await fetchApi("/api/relay?gameId=" + encodeURIComponent(gameId));
+  } catch (e) {
+    setLoading("불러오기 실패\n" + e.message);
+    return;
+  }
+  startGameView(data, mode);
+}
+
+function showGameViewShell() {
+  $("game-view").classList.add("open");
+  gv.open = true;
+  ensureRenderer();
+  resizeRenderer();
+}
+
+function setLoading(text) {
+  const el = $("gv-loading");
+  if (text) {
+    el.textContent = text;
+    el.style.display = "flex";
+  } else {
+    el.style.display = "none";
+  }
+}
+
+function startGameView(rawData, mode) {
+  const model = parseGameData(rawData);
+  if (model.events.length === 0) {
+    setLoading("문자중계가 아직 없음 (경기 시작 전일 수 있음)");
+    return;
+  }
+  window.__model = model;
+
+  gv.model = model;
+  gv.gameId = rawData.gameId || model.game.gameId;
+  gv.mode = mode;
+  gv.homeTeam = getTeamInfo(model.game.homeTeamCode, model.game.homeTeamName);
+  gv.awayTeam = getTeamInfo(model.game.awayTeamCode, model.game.awayTeamName);
+  gv.params = getStadiumParams(model.game.stadium);
+
+  console.log("[3D] 구장:", model.game.stadium, "→", gv.params.displayName, gv.params);
+  console.log("[3D] 이벤트", model.events.length, "개, PTS", Object.keys(model.ptsById).length, "개");
+
+  buildScene();
+
+  // 시작 위치: 다시보기 = 처음, 실시간 = 마지막 타석 시작
+  if (mode === "live") {
+    let start = model.events.length - 1;
+    for (let i = model.events.length - 1; i >= 0; i--) {
+      if (model.events[i].type === 8) {
+        start = i;
+        break;
+      }
+    }
+    gv.idx = start;
+  } else {
+    gv.idx = 0;
+  }
+  gv.playing = false;
+  gv.eventTime = 0;
+  applyStateAt(gv.idx, false);
+  updatePlayButton();
+  updateSpeedButton();
+
+  $("gv-venue").textContent = gv.params.displayName + (model.game.stadium ? "" : " (구장 정보 없음 → 기본값)");
+  $("gv-stadium").value = "";
+  setCameraPreset("포수 뒤"); // 좌석 고르기 전 배경
+  setLoading(null);
+  $("gv-seat-picker").style.display = "flex";
+
+  if (mode === "live") {
+    startPolling();
+  }
+}
+
+function closeGameView() {
+  gv.open = false;
+  gv.playing = false;
+  stopPolling();
+  $("game-view").classList.remove("open");
+  $("gv-seat-picker").style.display = "none";
+  if (gv.scene) {
+    disposeObject(gv.scene);
+    gv.scene = null;
+  }
+}
+
+function disposeObject(root) {
+  root.traverse(function (obj) {
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (const m of mats) {
+        if (m.map) m.map.dispose();
+        m.dispose();
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------
+// 렌더러 / 장면
+// ---------------------------------------------------------------------
+function ensureRenderer() {
+  if (gv.renderer) return;
+  const canvas = $("gv-canvas");
+  gv.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  gv.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  gv.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  gv.camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1500);
+  gv.camera.rotation.order = "YXZ";
+  window.addEventListener("resize", resizeRenderer);
+  bindLookControls(canvas);
+  requestAnimationFrame(renderLoop);
+}
+
+function resizeRenderer() {
+  if (!gv.renderer) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  gv.renderer.setSize(w, h, false);
+  gv.camera.aspect = w / h;
+  gv.camera.updateProjectionMatrix();
+}
+
+function buildScene() {
+  if (gv.scene) disposeObject(gv.scene);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(gv.params.roof ? 0x1d2026 : 0x0a1226);
+  scene.fog = new THREE.Fog(scene.background, 250, 700);
+
+  // 야간 경기 조명
+  scene.add(new THREE.HemisphereLight(0xcfdcff, 0x2a3a20, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6);
+  key.position.set(-40, 90, -30);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.7);
+  fill.position.set(50, 70, 120);
+  scene.add(fill);
+
+  gv.scene = scene;
+  gv.stadium = buildStadium(scene, gv.params, gv.homeTeam, gv.awayTeam);
+
+  // 공 + 궤적
+  const ballMesh = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  ballMesh.visible = false;
+  scene.add(ballMesh);
+  const trailGeometry = new THREE.BufferGeometry();
+  trailGeometry.setAttribute("position", new THREE.Float32BufferAttribute(new Array(30 * 3).fill(0), 3));
+  const trail = new THREE.Line(trailGeometry, new THREE.LineBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.8 }));
+  trail.visible = false;
+  trail.frustumCulled = false;
+  scene.add(trail);
+  gv.ball = { mesh: ballMesh, trail: trail, trailPoints: [], active: false, t: 0, path: null };
+
+  // 주심
+  const umpire = createPlayerFigure({ jerseyColor: "#15171a", pantsColor: "#4a4f57", capColor: "#15171a", number: "", name: "주심" });
+  umpire.position.set(0, 0, -2.2);
+  umpire.lookAt(0, 0, 10);
+  umpire.userData.label.visible = false;
+  scene.add(umpire);
+  gv.umpire = umpire;
+
+  // 선수 캐시 초기화
+  gv.defenseKey = "";
+  gv.defenseFigures = [];
+  gv.batterFigure = null;
+  gv.batterKey = "";
+  gv.runnerFigures = [null, null, null];
+  gv.runnerKeys = ["", "", ""];
+}
+
+function renderLoop(now) {
+  requestAnimationFrame(renderLoop);
+  if (!gv.open || !gv.scene) {
+    gv.lastFrame = now;
+    return;
+  }
+  const dt = Math.min(0.1, (now - (gv.lastFrame || now)) / 1000);
+  gv.lastFrame = now;
+  gv.clock += dt;
+
+  tickReplay(dt);
+  tickBall(dt * gv.speed);
+  tickCheer(dt);
+  updateCamera();
+  gv.renderer.render(gv.scene, gv.camera);
+}
+
+// ---------------------------------------------------------------------
+// 재생
+// ---------------------------------------------------------------------
+// 이벤트 종류별 재생 시간(1배속 기준, 초)
+function getEventDuration(ev) {
+  switch (ev.type) {
+    case 0: return 2.5; // 이닝 시작
+    case 8: return 2.0; // 타자 등장
+    case 1: return 2.8; // 투구 (공 궤적 끝나면 늘어남)
+    case 13: return 3.5; // 타격 결과
+    case 23: return 4.0; // 타격 결과(득점)
+    case 14: return 2.0; // 주자
+    case 24: return 2.5; // 주자(득점)
+    case 2: return 2.0; // 교체
+    case 7: return 0.8; // 기타 안내
+    case 99: return 3.0; // 경기 종료
+    default: return 1.2;
+  }
+}
+
+function tickReplay(dt) {
+  if (!gv.playing || !gv.model) return;
+  gv.eventTime += dt * gv.speed;
+  if (gv.eventTime < gv.eventDuration) return;
+
+  const next = gv.idx + 1;
+  if (next >= gv.model.events.length) {
+    // 끝: 다시보기는 멈추고, 실시간은 새 데이터 기다림
+    if (gv.mode !== "live") {
+      gv.playing = false;
+      updatePlayButton();
+    }
+    updateStatus();
+    return;
+  }
+  gv.idx = next;
+  gv.eventTime = 0;
+  applyStateAt(gv.idx, true);
+}
+
+function jumpTo(index) {
+  if (!gv.model) return;
+  gv.idx = Math.max(0, Math.min(gv.model.events.length - 1, index));
+  gv.eventTime = 0;
+  gv.ball.active = false;
+  gv.ball.mesh.visible = false;
+  gv.ball.trail.visible = false;
+  applyStateAt(gv.idx, false);
+}
+
+function jumpPlateAppearance(direction) {
+  const events = gv.model.events;
+  if (direction < 0) {
+    // 지금 타석의 시작(타자 등장) 찾기
+    let start = gv.idx;
+    while (start > 0 && events[start].type !== 8) start--;
+    if (gv.idx > start) {
+      // 타석 중간이면 → 그 타석 처음으로
+      jumpTo(start);
+      return;
+    }
+    // 이미 타석 시작이면 → 이전 타석 시작으로
+    let i = start - 1;
+    while (i > 0 && events[i].type !== 8) i--;
+    jumpTo(Math.max(0, i));
+  } else {
+    let i = gv.idx + 1;
+    while (i < events.length && events[i].type !== 8) i++;
+    jumpTo(Math.min(events.length - 1, i));
+  }
+}
+
+// ---------------------------------------------------------------------
+// 지금 위치까지 훑어서 계산 (투구 수, 타순별 현재 선수, 직전 타석 기록, 이닝별 점수)
+// ---------------------------------------------------------------------
+function scanUpTo(index) {
+  const events = gv.model.events;
+  const pitchCounts = {};
+  const orderToPcode = { home: {}, away: {} };
+  const recordBefore = {}; // pcode → 지금 타석 이전 기록
+  const lastRecord = {}; // pcode → 가장 최근 타석 기록
+  const line = { away: [], home: [] };
+  let prevAway = 0;
+  let prevHome = 0;
+  let lastPitch = null;
+
+  for (let i = 0; i <= index && i < events.length; i++) {
+    const ev = events[i];
+    const battingTeam = ev.half === "top" ? "away" : "home";
+
+    if (ev.type === 0) {
+      // 이닝 시작: 그 칸을 0으로 열어 둠
+      if (ev.half === "top" && line.away[ev.inning - 1] === undefined) line.away[ev.inning - 1] = 0;
+      if (ev.half === "bot" && line.home[ev.inning - 1] === undefined) line.home[ev.inning - 1] = 0;
+    }
+    if (ev.type === 1) {
+      pitchCounts[ev.gs.pitcher] = (pitchCounts[ev.gs.pitcher] || 0) + 1;
+      lastPitch = ev;
+    }
+    if (ev.type === 8 && ev.batterRecord) {
+      const rec = ev.batterRecord;
+      const pcode = String(rec.pcode || ev.gs.batter);
+      orderToPcode[battingTeam][rec.batOrder] = pcode;
+      // 네이버 batterRecord는 그 타석 결과까지 반영된 값 → 화면에는 "직전 타석까지" 기록을 보여준다
+      recordBefore[pcode] = lastRecord[pcode] || null;
+      lastRecord[pcode] = rec;
+    }
+    if (ev.gs.awayScore > prevAway) {
+      line.away[ev.inning - 1] = (line.away[ev.inning - 1] || 0) + (ev.gs.awayScore - prevAway);
+    }
+    if (ev.gs.homeScore > prevHome) {
+      line.home[ev.inning - 1] = (line.home[ev.inning - 1] || 0) + (ev.gs.homeScore - prevHome);
+    }
+    prevAway = ev.gs.awayScore;
+    prevHome = ev.gs.homeScore;
+  }
+  return { pitchCounts, orderToPcode, recordBefore, line, lastPitch };
+}
+
+// ---------------------------------------------------------------------
+// 이벤트 적용 (animate=false면 점프: 애니메이션/알림 없이 상태만)
+// ---------------------------------------------------------------------
+function applyStateAt(index, animate) {
+  const events = gv.model.events;
+  const ev = events[index];
+  const prev = index > 0 ? events[index - 1] : null;
+  const scan = scanUpTo(index);
+
+  gv.eventDuration = getEventDuration(ev);
+
+  // 수비(투수 포함) / 타자 / 주자
+  updateDefense(ev);
+  updateBatter(ev, scan);
+  updateRunners(ev, scan);
+
+  // 화면 정보
+  updateHud(ev, scan);
+  updateScoreboard3D(ev, scan);
+  renderLog(index);
+  updateStatus();
+
+  if (!animate) return;
+
+  // 알림 문구
+  showEventToast(ev);
+
+  // 투구 애니메이션
+  if (ev.type === 1) {
+    const flight = startPitchAnimation(ev);
+    gv.eventDuration = Math.max(gv.eventDuration, flight + 1.0);
+  }
+
+  // 득점 → 관중 환호
+  if (prev && (ev.gs.homeScore > prev.gs.homeScore || ev.gs.awayScore > prev.gs.awayScore)) {
+    gv.cheerTime = ev.text.indexOf("홈런") !== -1 ? 5 : 3;
+  }
+  if (ev.text.indexOf("홈런") !== -1 && (ev.type === 13 || ev.type === 23)) {
+    gv.cheerTime = 5;
+  }
+}
+
+// ---------------------------------------------------------------------
+// 선수 배치
+// ---------------------------------------------------------------------
+function removeFigure(fig) {
+  if (!fig) return;
+  gv.scene.remove(fig);
+  disposeObject(fig);
+}
+
+function figureForPlayer(player, team, isHome) {
+  const uniform = uniformFor(team, isHome);
+  const fig = createPlayerFigure({
+    jerseyColor: uniform.jerseyColor,
+    pantsColor: uniform.pantsColor,
+    capColor: uniform.capColor,
+    numberColor: uniform.numberColor,
+    number: player && player.backnum ? player.backnum : "",
+    name: player ? player.name : "?",
+  });
+  fig.userData.label.visible = gv.labelsVisible;
+  return fig;
+}
+
+// 그 팀에서 수비 위치 posNo인 선수 (선발 기준 — 수비 교체 반영은 3단계)
+function fielderAt(teamKey, posNo) {
+  const lineup = gv.model.lineups[teamKey] || {};
+  let best = null;
+  for (const b of lineup.batter || []) {
+    if (Number(b.pos) !== posNo) continue;
+    if (!best || Number(b.seqno) < Number(best.seqno)) best = b;
+  }
+  return best ? gv.model.players[best.pcode] : null;
+}
+
+function updateDefense(ev) {
+  const defenseTeamKey = ev.half === "top" ? "home" : "away";
+  const key = defenseTeamKey + ":" + ev.gs.pitcher;
+  if (key === gv.defenseKey) return;
+  gv.defenseKey = key;
+
+  for (const fig of gv.defenseFigures) removeFigure(fig);
+  gv.defenseFigures = [];
+
+  const team = defenseTeamKey === "home" ? gv.homeTeam : gv.awayTeam;
+  const isHome = defenseTeamKey === "home";
+
+  for (let posNo = 1; posNo <= 9; posNo++) {
+    let player;
+    if (posNo === 1) {
+      player = gv.model.players[ev.gs.pitcher] || null; // 지금 던지는 투수
+    } else {
+      player = fielderAt(defenseTeamKey, posNo);
+    }
+    const spot = defensePosition(posNo, gv.params);
+    if (!spot) continue;
+    const fig = figureForPlayer(player, team, isHome);
+    fig.position.set(spot.x, spot.y, spot.z);
+    if (posNo === 2) {
+      fig.lookAt(0, 0, MOUND_DIST); // 포수는 투수를 봄
+      fig.scale.set(1, 0.68, 1); // 앉은 자세
+    } else {
+      fig.lookAt(0, spot.y, 0); // 나머지는 홈을 봄
+    }
+    gv.scene.add(fig);
+    gv.defenseFigures.push(fig);
+  }
+}
+
+function updateBatter(ev, scan) {
+  const pcode = ev.gs.batter;
+  const battingTeamKey = ev.half === "top" ? "away" : "home";
+  const pitcher = gv.model.players[ev.gs.pitcher];
+  const player = gv.model.players[pcode];
+  const side = battingSide(player ? player.hitType : "", throwingHand(pitcher ? pitcher.hitType : ""));
+  const key = battingTeamKey + ":" + pcode + ":" + side;
+  if (key === gv.batterKey) return;
+  gv.batterKey = key;
+
+  removeFigure(gv.batterFigure);
+  gv.batterFigure = null;
+  if (!pcode || pcode === "0") return;
+
+  const team = battingTeamKey === "home" ? gv.homeTeam : gv.awayTeam;
+  const fig = figureForPlayer(player, team, battingTeamKey === "home");
+  // 좌타자 = 1루 쪽(−x) 타석, 우타자 = 3루 쪽(+x) 타석
+  const x = side === "L" ? -0.95 : 0.95;
+  fig.position.set(x, 0, 0.25);
+  fig.lookAt(0, 0, 0.25);
+  gv.scene.add(fig);
+  gv.batterFigure = fig;
+}
+
+function updateRunners(ev, scan) {
+  const battingTeamKey = ev.half === "top" ? "away" : "home";
+  const team = battingTeamKey === "home" ? gv.homeTeam : gv.awayTeam;
+  const baseSpots = [
+    { x: FIRST_BASE.x + 0.6, z: FIRST_BASE.z + 1.2 },
+    { x: SECOND_BASE.x + 1.3, z: SECOND_BASE.z - 0.3 },
+    { x: THIRD_BASE.x + 0.4, z: THIRD_BASE.z - 1.3 },
+  ];
+  const orders = [ev.gs.base1, ev.gs.base2, ev.gs.base3];
+
+  for (let b = 0; b < 3; b++) {
+    const order = orders[b];
+    const pcode = order > 0 ? scan.orderToPcode[battingTeamKey][order] || "" : "";
+    const key = order > 0 ? battingTeamKey + ":" + order + ":" + pcode : "";
+    if (key === gv.runnerKeys[b]) continue;
+    gv.runnerKeys[b] = key;
+    removeFigure(gv.runnerFigures[b]);
+    gv.runnerFigures[b] = null;
+    if (!key) continue;
+
+    let player = pcode ? gv.model.players[pcode] : null;
+    if (!player) {
+      const starter = starterAtOrder(gv.model.lineups[battingTeamKey], order);
+      player = starter ? gv.model.players[starter.pcode] : null;
+    }
+    const fig = figureForPlayer(player, team, battingTeamKey === "home");
+    fig.position.set(baseSpots[b].x, 0, baseSpots[b].z);
+    fig.lookAt(0, 0, 0);
+    gv.scene.add(fig);
+    gv.runnerFigures[b] = fig;
+  }
+}
+
+function setLabelsVisible(visible) {
+  gv.labelsVisible = visible;
+  const all = gv.defenseFigures.concat([gv.batterFigure], gv.runnerFigures);
+  for (const fig of all) {
+    if (fig && fig.userData.label) fig.userData.label.visible = visible;
+  }
+}
+
+// ---------------------------------------------------------------------
+// 투구 궤적 (네이버 PTS)
+// ---------------------------------------------------------------------
+const PITCH_SLOWMO = 2.4; // 실제 비행시간(약 0.45초)을 늘려서 보여줌
+
+function ptsPositionFeet(pts, t) {
+  return {
+    x: pts.x0 + pts.vx0 * t + 0.5 * pts.ax * t * t,
+    y: pts.y0 + pts.vy0 * t + 0.5 * pts.ay * t * t,
+    z: pts.z0 + pts.vz0 * t + 0.5 * pts.az * t * t,
+  };
+}
+function feetToScene(p) {
+  return { x: -p.x * FT, y: p.z * FT, z: p.y * FT };
+}
+// y(t) = targetY 가 되는 첫 시간
+function timeToReachY(pts, targetY) {
+  const a = 0.5 * pts.ay;
+  const b = pts.vy0;
+  const c = pts.y0 - targetY;
+  if (Math.abs(a) < 1e-6) return -c / b;
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return -c / b;
+  const r1 = (-b - Math.sqrt(disc)) / (2 * a);
+  const r2 = (-b + Math.sqrt(disc)) / (2 * a);
+  const candidates = [r1, r2].filter(function (t) { return t > 0; });
+  return candidates.length ? Math.min.apply(null, candidates) : 0.45;
+}
+
+// PTS가 없을 때: 구속 + 결과로 그럴듯한 궤적 만들기
+function syntheticPts(ev) {
+  const kmh = parseFloat(ev.speed) || 135;
+  const v = kmh / 3.6 / FT; // ft/s
+  const isBall = ev.pitchResult === "B";
+  let px = (Math.random() - 0.5) * 1.4;
+  let pz = 1.8 + Math.random() * 1.5;
+  if (isBall) {
+    if (Math.random() < 0.5) px = (Math.random() < 0.5 ? -1 : 1) * (1.1 + Math.random() * 0.6);
+    else pz = Math.random() < 0.5 ? 1.0 + Math.random() * 0.4 : 3.7 + Math.random() * 0.5;
+  }
+  const x0 = -1.8;
+  const y0 = 54;
+  const z0 = 5.8;
+  const t = (y0 - 17 / 12) / v;
+  const az = -32.2;
+  return {
+    x0: x0, y0: y0, z0: z0,
+    vx0: (px - x0) / t, vy0: -v, vz0: (pz - z0 - 0.5 * az * t * t) / t,
+    ax: 0, ay: 0, az: az, synthetic: true,
+  };
+}
+
+function startPitchAnimation(ev) {
+  const pts = (ev.ptsPitchId && gv.model.ptsById[ev.ptsPitchId]) || syntheticPts(ev);
+  const tPlate = timeToReachY(pts, 17 / 12);
+  const tCatcher = timeToReachY(pts, -2.2);
+  const plate = feetToScene(ptsPositionFeet(pts, tPlate));
+
+  const ball = gv.ball;
+  ball.active = true;
+  ball.t = 0;
+  ball.trailPoints = [];
+  ball.path = { pts: pts, tPlate: tPlate, tCatcher: tCatcher, plate: plate, result: ev.pitchResult };
+
+  // 파울: 홈 뒤/옆으로 튀는 속도 (보는 재미용)
+  if (ev.pitchResult === "F" || ev.pitchResult === "W") {
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    ball.path.foulVel = ev.pitchResult === "W"
+      ? { x: dir * 3, y: 1.5, z: 2 }
+      : { x: dir * (6 + Math.random() * 10), y: 10 + Math.random() * 8, z: -(10 + Math.random() * 10) };
+  }
+  ball.mesh.visible = true;
+  ball.trail.visible = true;
+
+  // 화면에 보이는 총 시간 (1배속)
+  return tPlate * PITCH_SLOWMO + 1.0;
+}
+
+function tickBall(dt) {
+  const ball = gv.ball;
+  if (!ball || !ball.active) return;
+  ball.t += dt / PITCH_SLOWMO;
+  const path = ball.path;
+  let pos;
+
+  if (ball.t <= path.tPlate) {
+    pos = feetToScene(ptsPositionFeet(path.pts, ball.t));
+  } else {
+    const after = ball.t - path.tPlate;
+    switch (path.result) {
+      case "H": // 타격 → 타구는 4단계에서. 지금은 홈에서 사라짐
+        ball.active = false;
+        ball.mesh.visible = false;
+        ball.trail.visible = false;
+        return;
+      case "F": // 파울
+      case "W": {
+        const v = path.foulVel;
+        const t = after * PITCH_SLOWMO * 0.6;
+        pos = { x: path.plate.x + v.x * t, y: Math.max(0.05, path.plate.y + v.y * t - 4.9 * t * t), z: path.plate.z + v.z * t };
+        if (t > 1.4) ball.active = false;
+        break;
+      }
+      default: // 볼/스트라이크/헛스윙 → 포수 미트까지
+        if (ball.t <= path.tCatcher) {
+          pos = feetToScene(ptsPositionFeet(path.pts, ball.t));
+        } else {
+          pos = feetToScene(ptsPositionFeet(path.pts, path.tCatcher));
+          if (after > 0.5) ball.active = false;
+        }
+    }
+  }
+
+  ball.mesh.position.set(pos.x, pos.y, pos.z);
+  ball.trailPoints.push(pos);
+  if (ball.trailPoints.length > 30) ball.trailPoints.shift();
+  const attr = ball.trail.geometry.getAttribute("position");
+  for (let i = 0; i < 30; i++) {
+    const p = ball.trailPoints[Math.min(i, ball.trailPoints.length - 1)];
+    attr.setXYZ(i, p.x, p.y, p.z);
+  }
+  attr.needsUpdate = true;
+
+  if (!ball.active) {
+    setTimeout(function () {
+      if (!gv.ball.active) {
+        gv.ball.mesh.visible = false;
+        gv.ball.trail.visible = false;
+      }
+    }, 600);
+  }
+}
+
+// ---------------------------------------------------------------------
+// 관중 환호 (득점 때 들썩)
+// ---------------------------------------------------------------------
+function tickCheer(dt) {
+  if (gv.cheerTime <= 0 || !gv.stadium) return;
+  gv.cheerTime -= dt;
+  const ending = gv.cheerTime <= 0;
+  writeCrowdMatrices(function (spot, i) {
+    if (ending) return 0;
+    const angle = Math.atan2(spot.x, spot.z);
+    return Math.max(0, Math.sin(gv.clock * 9 + angle * 6 + i * 0.37)) * 0.35;
+  });
+}
+
+// 관중 위치 다시 쓰기. liftFn(spot, i) → 들썩이는 높이. 카메라 바로 앞 관중은 숨김(크기 0)
+function writeCrowdMatrices(liftFn) {
+  const crowd = gv.stadium.crowd;
+  const dummy = new THREE.Object3D();
+  const camX = gv.cam.x;
+  const camY = gv.cam.y;
+  const camZ = gv.cam.z;
+  for (let i = 0; i < crowd.spots.length; i++) {
+    const s = crowd.spots[i];
+    const lift = liftFn ? liftFn(s, i) : 0;
+    dummy.position.set(s.x, s.y + lift, s.z);
+    dummy.lookAt(0, s.y + lift, 40);
+    // 내 자리 주변 5.5m 안, 내 눈높이보다 낮은 앞줄 관중은 시야를 가리니 숨김
+    const near = (s.x - camX) ** 2 + (s.z - camZ) ** 2 < 5.5 * 5.5 && s.y > camY - 4.5 && s.y < camY + 0.5;
+    dummy.scale.setScalar(near ? 0.0001 : 1);
+    dummy.updateMatrix();
+    crowd.crowdBodies.setMatrixAt(i, dummy.matrix);
+    crowd.crowdHeads.setMatrixAt(i, dummy.matrix);
+  }
+  crowd.crowdBodies.instanceMatrix.needsUpdate = true;
+  crowd.crowdHeads.instanceMatrix.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------------
+// 카메라 (좌석 프리셋 + 드래그로 고개 돌리기 + 핀치 줌 + 자이로)
+// ---------------------------------------------------------------------
+function nearestBoundaryPoint(target) {
+  let best = null;
+  let bestD = Infinity;
+  for (const b of gv.stadium.boundary) {
+    if (rowsAt(b, gv.params) === 0) continue;
+    const d = (b.x - target.x) ** 2 + (b.z - target.z) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = b;
+    }
+  }
+  return best;
+}
+
+function seatCamera(target, row, look) {
+  const pt = nearestBoundaryPoint(target);
+  const r = Math.min(row, rowsAt(pt, gv.params) - 1);
+  const g = seatRowGeometry(pt, r, gv.params);
+  return {
+    x: pt.x + pt.nx * (g.offset + 0.45),
+    y: g.height + 1.15, // 앉은 눈높이
+    z: pt.z + pt.nz * (g.offset + 0.45),
+    look: look,
+  };
+}
+
+function getCameraPreset(name) {
+  const p = gv.params;
+  const firstSideTarget = { x: -24 * Math.SQRT1_2 - p.foulWidth * Math.SQRT1_2, z: 24 * Math.SQRT1_2 - p.foulWidth * Math.SQRT1_2 };
+  switch (name) {
+    case "1루 내야석":
+      return seatCamera(firstSideTarget, 7, { x: 0, y: 1, z: 22 });
+    case "3루 내야석":
+      return seatCamera({ x: -firstSideTarget.x, z: firstSideTarget.z }, 7, { x: 0, y: 1, z: 22 });
+    case "포수 뒤":
+      return seatCamera({ x: 0, z: -p.backstop }, 5, { x: 0, y: 1, z: 25 });
+    case "외야석": {
+      const pt = fieldPoint(-28, fenceDistanceAt(-28, p) + 2);
+      return seatCamera(pt, 3, { x: 0, y: 1, z: 8 });
+    }
+    case "응원단": {
+      const s = 40;
+      const target = { x: -s * Math.SQRT1_2 - p.foulWidth * Math.SQRT1_2, z: s * Math.SQRT1_2 - p.foulWidth * Math.SQRT1_2 };
+      if (p.homeSide !== "1루") target.x = -target.x;
+      return seatCamera(target, 2, { x: 0, y: 1, z: 25 });
+    }
+    case "중계 시점":
+      return { x: 0, y: 13, z: -26, look: { x: 0, y: 0, z: 26 }, fov: 38 };
+    case "하늘 시점": // 구장 전체 모양 확인용
+      return { x: 0, y: 170, z: -70, look: { x: 0, y: 0, z: 55 }, fov: 50 };
+    default:
+      return seatCamera({ x: 0, z: -p.backstop }, 5, { x: 0, y: 1, z: 25 });
+  }
+}
+
+function setCameraPreset(name) {
+  const preset = getCameraPreset(name);
+  gv.cam.x = preset.x;
+  gv.cam.y = preset.y;
+  gv.cam.z = preset.z;
+  const dx = preset.look.x - preset.x;
+  const dy = preset.look.y - preset.y;
+  const dz = preset.look.z - preset.z;
+  gv.cam.yaw = Math.atan2(-dx, -dz);
+  gv.cam.pitch = Math.atan2(dy, Math.hypot(dx, dz));
+  gv.cam.fov = preset.fov || 55;
+  gv.cam.preset = name;
+  gv.gyro.baseAlpha = null; // 자이로 기준 다시 잡기
+  writeCrowdMatrices(null); // 내 앞 관중 숨기기
+
+  const buttons = document.querySelectorAll("#gv-cams button[data-cam]");
+  for (const b of buttons) b.classList.toggle("active", b.getAttribute("data-cam") === name);
+}
+
+function updateCamera() {
+  gv.camera.position.set(gv.cam.x, gv.cam.y, gv.cam.z);
+  gv.camera.rotation.set(gv.cam.pitch, gv.cam.yaw, 0, "YXZ");
+  if (Math.abs(gv.camera.fov - gv.cam.fov) > 0.01) {
+    gv.camera.fov = gv.cam.fov;
+    gv.camera.updateProjectionMatrix();
+  }
+}
+
+function bindLookControls(canvas) {
+  const pointers = {};
+  let pinchStart = null;
+
+  canvas.addEventListener("pointerdown", function (e) {
+    canvas.setPointerCapture(e.pointerId);
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    const ids = Object.keys(pointers);
+    if (ids.length === 2) {
+      const a = pointers[ids[0]];
+      const b = pointers[ids[1]];
+      pinchStart = { dist: Math.hypot(a.x - b.x, a.y - b.y), fov: gv.cam.fov };
+    }
+  });
+  canvas.addEventListener("pointermove", function (e) {
+    const prev = pointers[e.pointerId];
+    if (!prev) return;
+    const ids = Object.keys(pointers);
+    if (ids.length === 1) {
+      // 드래그: 화면을 잡아 끄는 느낌 (오른쪽으로 끌면 왼쪽을 봄)
+      const k = 0.0042 * (gv.cam.fov / 55);
+      gv.cam.yaw += (e.clientX - prev.x) * k;
+      gv.cam.pitch += (e.clientY - prev.y) * k;
+      gv.cam.pitch = Math.max(-1.3, Math.min(1.3, gv.cam.pitch));
+    }
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (ids.length === 2 && pinchStart) {
+      const a = pointers[ids[0]];
+      const b = pointers[ids[1]];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      gv.cam.fov = Math.max(15, Math.min(80, pinchStart.fov * (pinchStart.dist / dist)));
+    }
+  });
+  function release(e) {
+    delete pointers[e.pointerId];
+    if (Object.keys(pointers).length < 2) pinchStart = null;
+  }
+  canvas.addEventListener("pointerup", release);
+  canvas.addEventListener("pointercancel", release);
+  canvas.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    gv.cam.fov = Math.max(15, Math.min(80, gv.cam.fov * (e.deltaY > 0 ? 1.08 : 0.92)));
+  }, { passive: false });
+}
+
+// 자이로: 켠 순간의 폰 방향을 기준으로 바뀐 만큼 고개를 돌림
+async function toggleGyro() {
+  if (gv.gyro.on) {
+    gv.gyro.on = false;
+    window.removeEventListener("deviceorientation", onDeviceOrientation);
+    $("gv-gyro").classList.remove("active");
+    return;
+  }
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      const result = await DeviceOrientationEvent.requestPermission(); // iOS
+      if (result !== "granted") return;
+    } catch (e) {
+      return;
+    }
+  }
+  gv.gyro.on = true;
+  gv.gyro.baseAlpha = null;
+  window.addEventListener("deviceorientation", onDeviceOrientation);
+  $("gv-gyro").classList.add("active");
+}
+
+function onDeviceOrientation(e) {
+  if (!gv.gyro.on || e.alpha === null) return;
+  if (gv.gyro.baseAlpha === null) {
+    gv.gyro.baseAlpha = e.alpha;
+    gv.gyro.baseBeta = e.beta;
+    gv.gyro.baseGamma = e.gamma;
+    gv.gyro.yaw0 = gv.cam.yaw;
+    gv.gyro.pitch0 = gv.cam.pitch;
+    return;
+  }
+  const toRad = Math.PI / 180;
+  let dAlpha = e.alpha - gv.gyro.baseAlpha;
+  if (dAlpha > 180) dAlpha -= 360;
+  if (dAlpha < -180) dAlpha += 360;
+  // 가로 화면: 앞뒤 기울기는 gamma, 세로 화면: beta
+  const angle = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
+  let dPitch;
+  if (angle === 90) dPitch = -(e.gamma - gv.gyro.baseGamma);
+  else if (angle === -90 || angle === 270) dPitch = e.gamma - gv.gyro.baseGamma;
+  else dPitch = e.beta - gv.gyro.baseBeta;
+  gv.cam.yaw = gv.gyro.yaw0 + dAlpha * toRad;
+  gv.cam.pitch = Math.max(-1.3, Math.min(1.3, gv.gyro.pitch0 + dPitch * toRad));
+}
+
+// ---------------------------------------------------------------------
+// HUD (상단 스코어, B-S-O, 주자, 투수/타자)
+// ---------------------------------------------------------------------
+function updateHud(ev, scan) {
+  $("gv-away-name").textContent = gv.awayTeam.name;
+  $("gv-home-name").textContent = gv.homeTeam.name;
+  $("gv-away-chip").style.background = gv.awayTeam.color;
+  $("gv-home-chip").style.background = gv.homeTeam.color;
+  $("gv-away-score").textContent = ev.gs.awayScore;
+  $("gv-home-score").textContent = ev.gs.homeScore;
+  $("gv-inning").textContent = ev.inning + "회" + (ev.half === "top" ? "초 ▲" : "말 ▼");
+
+  setDots("gv-b", ev.gs.ball, 3);
+  setDots("gv-s", ev.gs.strike, 2);
+  setDots("gv-o", ev.gs.out, 2);
+
+  $("gv-base1").classList.toggle("on", ev.gs.base1 > 0);
+  $("gv-base2").classList.toggle("on", ev.gs.base2 > 0);
+  $("gv-base3").classList.toggle("on", ev.gs.base3 > 0);
+
+  // 투수
+  const pitcher = gv.model.players[ev.gs.pitcher];
+  const pitchCount = scan.pitchCounts[ev.gs.pitcher] || 0;
+  let pitchInfo = "";
+  if (scan.lastPitch && scan.lastPitch.gs.pitcher === ev.gs.pitcher) {
+    pitchInfo = " · " + scan.lastPitch.speed + "km " + scan.lastPitch.stuff;
+  }
+  $("gv-pitcher").textContent = pitcher
+    ? "투수 " + pitcher.name + " #" + pitcher.backnum + " · " + pitchCount + "구" + pitchInfo
+    : "투수 -";
+
+  // 타자
+  const batter = gv.model.players[ev.gs.batter];
+  let batterText = "타자 -";
+  if (batter) {
+    const before = scan.recordBefore[ev.gs.batter];
+    let today = "첫 타석";
+    if (before) today = before.ab + "타수 " + before.hit + "안타" + (before.rbi ? " " + before.rbi + "타점" : "");
+    batterText = "타자 " + batter.name + " #" + batter.backnum + " (" + battingSide(batter.hitType, "R") + "타) · " + today;
+  }
+  $("gv-batter").textContent = batterText;
+}
+
+function setDots(containerId, count, max) {
+  const el = $(containerId);
+  let html = "";
+  for (let i = 0; i < max; i++) html += '<i class="' + (i < count ? "on" : "") + '"></i>';
+  el.innerHTML = html;
+}
+
+function updateScoreboard3D(ev, scan) {
+  if (!gv.stadium) return;
+  const g = ev.gs;
+  const pitcher = gv.model.players[g.pitcher];
+  const batter = gv.model.players[g.batter];
+  const pitchCount = scan.pitchCounts[g.pitcher] || 0;
+  let pitchText = "";
+  if (scan.lastPitch) pitchText = scan.lastPitch.speed + " km/h  " + scan.lastPitch.stuff;
+  drawScoreboard(gv.stadium.scoreboard, {
+    awayName: gv.awayTeam.name,
+    homeName: gv.homeTeam.name,
+    line: scan.line,
+    totals: {
+      away: [g.awayScore, g.awayHit, g.awayError, g.awayBallFour],
+      home: [g.homeScore, g.homeHit, g.homeError, g.homeBallFour],
+    },
+    bso: { ball: g.ball, strike: g.strike, out: g.out },
+    pitcherText: "P  " + (pitcher ? pitcher.name + " #" + pitcher.backnum : "-") + "   " + pitchCount + "구",
+    batterText: "B  " + (batter ? batter.name + " #" + batter.backnum : "-"),
+    pitchText: pitchText,
+  });
+}
+
+// 알림 문구 (이벤트 종류별)
+function showEventToast(ev) {
+  let text = "";
+  let big = false;
+  switch (ev.type) {
+    case 0:
+      text = ev.text;
+      big = true;
+      break;
+    case 8:
+      text = ev.text;
+      break;
+    case 1:
+      text = getPitchResultName(ev.pitchResult) + (ev.speed ? "  " + ev.speed + "km " + ev.stuff : "");
+      break;
+    case 13:
+    case 23:
+      text = ev.text.indexOf(" : ") !== -1 ? ev.text.split(" : ")[1] : ev.text;
+      big = true;
+      break;
+    case 14:
+    case 24:
+    case 2:
+      text = ev.text;
+      break;
+    case 99:
+      text = ev.text.indexOf("=") === 0 ? "경기 종료" : ev.text;
+      big = true;
+      break;
+    default:
+      return;
+  }
+  if (ev.text.indexOf("홈런") !== -1 && (ev.type === 13 || ev.type === 23)) {
+    text = "⚾ 홈런! " + text;
+  }
+  const toast = $("gv-toast");
+  toast.textContent = text;
+  toast.className = big ? "show big" : "show";
+  clearTimeout(gv.toastTimer);
+  gv.toastTimer = setTimeout(function () {
+    toast.className = "";
+  }, Math.max(900, 2300 / gv.speed));
+}
+
+// 하단 문자중계 로그 (지금 위치까지만 — 스포일러 없음)
+function renderLog(index) {
+  const events = gv.model.events;
+  const from = Math.max(0, index - 40);
+  let html = "";
+  for (let i = from; i <= index; i++) {
+    const ev = events[i];
+    if (ev.type === 7) continue;
+    let text = ev.text;
+    if (ev.type === 1 && ev.speed) text += " · " + ev.stuff + " " + ev.speed + "km";
+    let cls = "t" + ev.type;
+    if (i === index) cls += " current";
+    html += '<div class="' + cls + '" data-idx="' + i + '">' + escapeHtml(text) + "</div>";
+  }
+  const log = $("gv-log");
+  log.innerHTML = html;
+  log.scrollTop = log.scrollHeight;
+}
+
+function updateStatus() {
+  if (!gv.model) return;
+  const ev = gv.model.events[gv.idx];
+  let text;
+  if (gv.mode === "live") {
+    const delay = eventDelaySeconds(gv.idx);
+    const atEnd = gv.idx >= gv.model.events.length - 1;
+    text = "실시간" + (delay !== null ? " · 약 " + delay + "초 지연" : "") + (atEnd ? " · 새 기록 기다리는 중" : "");
+  } else {
+    text = "다시보기 · " + ev.inning + "회" + (ev.half === "top" ? "초" : "말") + " · " + (gv.idx + 1) + "/" + gv.model.events.length;
+  }
+  $("gv-status").textContent = text;
+}
+
+// 지금 이벤트 근처 투구 시각(ptsPitchId: yymmdd_HHMMSS, 한국시간) → 지금과의 차이
+function eventDelaySeconds(index) {
+  const events = gv.model.events;
+  for (let i = index; i >= 0; i--) {
+    const id = events[i].ptsPitchId;
+    if (!id) continue;
+    const m = /^(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/.exec(id);
+    if (!m) return null;
+    const at = new Date("20" + m[1] + "-" + m[2] + "-" + m[3] + "T" + m[4] + ":" + m[5] + ":" + m[6] + "+09:00");
+    return Math.max(0, Math.round((Date.now() - at.getTime()) / 1000));
+  }
+  return null;
+}
+
+function updatePlayButton() {
+  $("gv-play").textContent = gv.playing ? "⏸" : "▶";
+}
+function updateSpeedButton() {
+  $("gv-speed").textContent = gv.speed + "x";
+}
+
+// ---------------------------------------------------------------------
+// 실시간: 5초마다 지금 이닝(과 다음 이닝)을 다시 받아 새 기록만 붙인다
+// ---------------------------------------------------------------------
+function startPolling() {
+  stopPolling();
+  gv.pollTimer = setInterval(pollLive, 5000);
+}
+function stopPolling() {
+  if (gv.pollTimer) {
+    clearInterval(gv.pollTimer);
+    gv.pollTimer = null;
+  }
+}
+
+async function pollLive() {
+  if (!gv.model || !gv.open) return;
+  const events = gv.model.events;
+  const last = events[events.length - 1];
+  if (last.type === 99) {
+    stopPolling();
+    return;
+  }
+  const innings = [last.inning, last.inning + 1];
+  let added = 0;
+  for (const inn of innings) {
+    let res;
+    try {
+      res = await fetchApi("/api/relay?gameId=" + encodeURIComponent(gv.gameId) + "&inning=" + inn);
+    } catch (e) {
+      console.warn("[실시간] 받기 실패", e.message);
+      continue;
+    }
+    if (!res.inningExists) continue;
+    const trd = res.result.textRelayData;
+    const seen = {};
+    for (const ev of events) seen[ev.seqno] = true;
+    for (const relay of trd.textRelays || []) {
+      for (const pts of relay.ptsOptions || []) gv.model.ptsById[pts.pitchId] = pts;
+      for (const opt of relay.textOptions || []) {
+        if (seen[opt.seqno]) continue; // 이미 받은 이벤트는 seqno로 거름
+        seen[opt.seqno] = true;
+        events.push(makeEvent(relay, opt));
+        added++;
+      }
+    }
+    // 교체 선수 반영
+    mergeLineups(trd);
+  }
+  if (added > 0) {
+    events.sort(function (a, b) { return a.seqno - b.seqno; });
+    console.log("[실시간] 새 이벤트", added, "개");
+  }
+  updateStatus();
+}
+
+function mergeLineups(trd) {
+  const sides = [["homeLineup", "home"], ["awayLineup", "away"]];
+  for (const pair of sides) {
+    const lineup = trd[pair[0]];
+    if (!lineup) continue;
+    gv.model.lineups[pair[1]] = lineup;
+    for (const kind of ["batter", "pitcher"]) {
+      for (const pl of lineup[kind] || []) {
+        if (!pl.pcode) continue;
+        gv.model.players[pl.pcode] = Object.assign(gv.model.players[pl.pcode] || {}, {
+          pcode: String(pl.pcode), name: pl.name, backnum: pl.backnum || "",
+          hitType: pl.hitType || "", pos: pl.pos, posName: pl.posName || "",
+          batOrder: pl.batOrder, seqno: pl.seqno, team: pair[1], kind: kind,
+        });
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// 버튼 연결
+// ---------------------------------------------------------------------
+function setupGameViewControls() {
+  $("gv-exit").addEventListener("click", closeGameView);
+  $("gv-play").addEventListener("click", function () {
+    gv.playing = !gv.playing;
+    updatePlayButton();
+  });
+  $("gv-prev").addEventListener("click", function () {
+    jumpPlateAppearance(-1);
+  });
+  $("gv-next").addEventListener("click", function () {
+    jumpPlateAppearance(1);
+  });
+  $("gv-speed").addEventListener("click", function () {
+    if (gv.speed === 1) gv.speed = 2;
+    else if (gv.speed === 2) gv.speed = 4;
+    else gv.speed = 1;
+    updateSpeedButton();
+  });
+  $("gv-labels").addEventListener("click", function () {
+    setLabelsVisible(!gv.labelsVisible);
+    $("gv-labels").classList.toggle("active", gv.labelsVisible);
+  });
+  $("gv-gyro").addEventListener("click", toggleGyro);
+
+  // 구장 바꿔 보기 (9개 구장 확인용 — 같은 경기 데이터로 다른 구장을 띄움)
+  $("gv-stadium").addEventListener("change", function () {
+    const value = $("gv-stadium").value;
+    if (!gv.model) return;
+    gv.params = getStadiumParams(value || gv.model.game.stadium);
+    buildScene();
+    applyStateAt(gv.idx, false);
+    setCameraPreset(gv.cam.preset || "포수 뒤");
+    $("gv-venue").textContent = gv.params.displayName;
+  });
+  $("gv-log-toggle").addEventListener("click", function () {
+    $("gv-bottom").classList.toggle("collapsed");
+  });
+  $("gv-log").addEventListener("click", function (e) {
+    const row = e.target.closest("[data-idx]");
+    if (row) jumpTo(Number(row.getAttribute("data-idx")));
+  });
+
+  // 카메라 버튼 + 첫 좌석 선택
+  const camButtons = document.querySelectorAll("#gv-cams button[data-cam]");
+  for (const b of camButtons) {
+    b.addEventListener("click", function () {
+      setCameraPreset(b.getAttribute("data-cam"));
+    });
+  }
+  const seatButtons = document.querySelectorAll("#gv-seat-picker button[data-cam]");
+  for (const b of seatButtons) {
+    b.addEventListener("click", function () {
+      setCameraPreset(b.getAttribute("data-cam"));
+      $("gv-seat-picker").style.display = "none";
+      gv.playing = true;
+      updatePlayButton();
+    });
+  }
+}
+
 
 setup();
 </script>
