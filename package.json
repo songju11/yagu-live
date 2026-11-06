@@ -1,0 +1,8 @@
+{
+  "name": "yagu-live",
+  "private": true,
+  "description": "야구 같이 보기 — Netlify Functions가 쓰는 라이브러리 목록",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.7"
+  }
+}

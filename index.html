@@ -192,6 +192,25 @@
     #gv-top { max-width: calc(100vw - 16px); }
     #gv-cams { top: auto; bottom: 150px; flex-direction: row; flex-wrap: wrap; max-width: calc(100vw - 16px); }
   }
+
+  #gv-cams { display: grid; grid-template-columns: 1fr 1fr; align-content: start; }
+  #gv-cams #gv-exit, #gv-cams select, .gv-people, #gv-cams .wide { grid-column: span 2; }
+  #gv-cams.collapsed .more { display: none; }
+  .gv-people { font-size: 12px; text-align: center; color: var(--text); padding: 2px 0; }
+  #gv-cams button.social { background: rgba(63,182,139,0.18); }
+  #gv-joystick { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: 150px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); display: none; touch-action: none; }
+  #gv-joy-knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: rgba(255,255,255,0.55); pointer-events: none; }
+  #gv-chat { left: max(8px, env(safe-area-inset-left)); top: 96px; width: min(340px, 45vw); padding: 6px; display: none; flex-direction: column; gap: 4px; }
+  #gv-chat.open { display: flex; }
+  #gv-chat.has-new:not(.open) { display: flex; opacity: 0.85; pointer-events: none; }
+  #gv-chat.has-new:not(.open) .row { display: none; }
+  #gv-chat-feed { max-height: 120px; overflow-y: auto; font-size: 12px; line-height: 1.45; }
+  #gv-chat-feed .mine b { color: var(--accent); }
+  #gv-chat .row { display: flex; gap: 4px; }
+  #gv-chat input { flex: 1; min-width: 0; background: rgba(255,255,255,0.08); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; color: var(--text); font-size: 13px; }
+  #gv-chat button { padding: 5px 9px; font-size: 12px; }
+  #gv-seat-picker .entry-row { display: flex; gap: 8px; }
+  #gv-seat-picker .entry-row input, #gv-seat-picker .entry-row select { background: rgba(23,27,34,0.92); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -293,18 +312,24 @@
     </div>
   </div>
 
-  <div id="gv-cams" class="gv-panel">
+  <div id="gv-cams" class="gv-panel collapsed">
     <button id="gv-exit">✕ 나가기</button>
-    <button data-cam="1루 내야석">1루 내야석</button>
-    <button data-cam="3루 내야석">3루 내야석</button>
-    <button data-cam="포수 뒤">포수 뒤</button>
-    <button data-cam="외야석">외야석</button>
-    <button data-cam="응원단">응원단</button>
-    <button data-cam="중계 시점">중계 시점</button>
-    <button data-cam="하늘 시점">하늘 시점</button>
-    <button id="gv-gyro">자이로</button>
-    <button id="gv-labels" class="active">이름표</button>
-    <select id="gv-stadium" title="다른 구장으로 바꿔 보기">
+    <span id="gv-people" class="gv-people">👥 -</span>
+    <button id="gv-stand" class="social">일어나기</button>
+    <button id="gv-chat-btn" class="social">채팅</button>
+    <button id="gv-emote-cheer" class="social">🙌 환호</button>
+    <button id="gv-emote-wave" class="social">👋 손</button>
+    <button id="gv-more" class="wide">자리·시점 ▾</button>
+    <button class="more" data-cam="1루 내야석">1루 내야석</button>
+    <button class="more" data-cam="3루 내야석">3루 내야석</button>
+    <button class="more" data-cam="포수 뒤">포수 뒤</button>
+    <button class="more" data-cam="외야석">외야석</button>
+    <button class="more" data-cam="응원단">응원단</button>
+    <button class="more" data-cam="중계 시점">중계 시점</button>
+    <button class="more" data-cam="하늘 시점">하늘 시점</button>
+    <button class="more" id="gv-gyro">자이로</button>
+    <button class="more active" id="gv-labels">이름표</button>
+    <select class="more" id="gv-stadium" title="다른 구장으로 바꿔 보기">
       <option value="">이 경기 구장</option>
       <option value="잠실">잠실</option>
       <option value="고척">고척</option>
@@ -320,6 +345,18 @@
 
   <div id="gv-toast"></div>
 
+  <!-- 걷기 조이스틱 (폰에서 일어났을 때) -->
+  <div id="gv-joystick"><div id="gv-joy-knob"></div></div>
+
+  <!-- 채팅 (같은 경기를 보는 사람들) -->
+  <div id="gv-chat" class="gv-panel">
+    <div id="gv-chat-feed"></div>
+    <div class="row">
+      <input type="text" id="gv-chat-input" maxlength="80" placeholder="같이 보는 사람들에게 한마디">
+      <button id="gv-chat-send">보내기</button>
+    </div>
+  </div>
+
   <div id="gv-bottom" class="gv-panel">
     <div id="gv-controls">
       <button id="gv-prev" title="이전 타석">⏮</button>
@@ -334,6 +371,14 @@
 
   <div id="gv-seat-picker">
     <div style="font-size:18px;font-weight:800">어디에 앉을까?</div>
+    <div class="entry-row">
+      <input type="text" id="gv-nick" maxlength="12" placeholder="닉네임">
+      <select id="gv-support">
+        <option value="home">홈팀 응원</option>
+        <option value="away">원정팀 응원</option>
+        <option value="neutral">중립</option>
+      </select>
+    </div>
     <div class="seats">
       <button data-cam="1루 내야석">1루 내야석</button>
       <button data-cam="3루 내야석">3루 내야석</button>
@@ -2562,52 +2607,79 @@ function makeLabelTexture(text, options) {
 }
 
 function createPlayerFigure(info) {
-  // info: { jerseyColor, pantsColor, capColor, number, name }
+  // info: { jerseyColor, pantsColor, capColor, numberColor, number, name, labelAlways }
+  // 관절 구조: 몸(root) ─ 엉덩이(hips) ─ 다리 2개(pivot)
+  //                     └ 상체(torso, pivot) ─ 팔 2개(어깨 pivot), 머리, 등번호
   const group = new THREE.Group();
   const jersey = new THREE.MeshLambertMaterial({ color: info.jerseyColor });
   const pants = new THREE.MeshLambertMaterial({ color: info.pantsColor });
   const cap = new THREE.MeshLambertMaterial({ color: info.capColor });
   const skin = new THREE.MeshLambertMaterial({ color: 0xd9a77c });
 
-  // 다리
-  for (const side of [-1, 1]) {
+  const body = new THREE.Group(); // 전체를 숙이거나 낮출 때 쓰는 그룹
+  group.add(body);
+
+  // 다리 (엉덩이 높이 0.88에서 회전)
+  const legs = {};
+  for (const side of ["L", "R"]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(side === "L" ? 0.11 : -0.11, 0.88, 0);
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.86, 0.19), pants);
-    leg.position.set(side * 0.11, 0.43, 0);
-    group.add(leg);
+    leg.position.y = -0.43;
+    pivot.add(leg);
+    body.add(pivot);
+    legs[side] = pivot;
   }
-  // 몸통
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.64, 0.27), jersey);
-  torso.position.set(0, 1.18, 0);
-  group.add(torso);
-  // 팔
-  for (const side of [-1, 1]) {
+
+  // 상체 (허리 0.88에서 회전)
+  const torso = new THREE.Group();
+  torso.position.set(0, 0.88, 0);
+  body.add(torso);
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.64, 0.27), jersey);
+  chest.position.y = 0.32;
+  torso.add(chest);
+
+  // 팔 (어깨 0.58에서 회전)
+  const arms = {};
+  for (const side of ["L", "R"]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(side === "L" ? 0.31 : -0.31, 0.58, 0);
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.62, 0.13), jersey);
-    arm.position.set(side * 0.31, 1.15, 0);
-    group.add(arm);
+    arm.position.y = -0.29;
+    pivot.add(arm);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), skin);
+    hand.position.y = -0.62;
+    pivot.add(hand);
+    torso.add(pivot);
+    arms[side] = pivot;
   }
+
   // 머리 + 모자
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.125, 12, 10), skin);
-  head.position.set(0, 1.64, 0);
-  group.add(head);
+  head.position.set(0, 0.76, 0);
+  torso.add(head);
   const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.133, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), cap);
-  capTop.position.set(0, 1.67, 0);
-  group.add(capTop);
+  capTop.position.set(0, 0.79, 0);
+  torso.add(capTop);
   const brim = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.02, 0.12), cap);
-  brim.position.set(0, 1.68, 0.15);
-  group.add(brim);
+  brim.position.set(0, 0.8, 0.15);
+  torso.add(brim);
 
   // 등번호 + 이름 (등 쪽 = -z)
-  const backTexture = makeLabelTexture(info.name + "\n" + info.number, {
-    width: 128, height: 128, fontSize: 40, color: info.numberColor || "#ffffff",
-  });
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: backTexture, transparent: true }));
-  back.position.set(0, 1.2, -0.14);
-  back.rotation.y = Math.PI;
-  group.add(back);
+  if (info.number !== undefined && info.number !== "") {
+    const backTexture = makeLabelTexture(info.name + "\n" + info.number, {
+      width: 128, height: 128, fontSize: 40, color: info.numberColor || "#ffffff",
+    });
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: backTexture, transparent: true }));
+    back.position.set(0, 0.34, -0.14);
+    back.rotation.y = Math.PI;
+    torso.add(back);
+  }
 
   // 머리 위 이름표
+  const labelText = info.number ? info.number + " " + info.name : info.name;
   const label = new THREE.Sprite(
-    new THREE.SpriteMaterial({ map: makeLabelTexture(info.number + " " + info.name, { background: "rgba(0,0,0,0.55)", fontSize: 32 }), depthTest: false })
+    new THREE.SpriteMaterial({ map: makeLabelTexture(labelText, { background: "rgba(0,0,0,0.55)", fontSize: 32 }), depthTest: false })
   );
   label.scale.set(2.4, 0.6, 1);
   label.position.set(0, 2.35, 0);
@@ -2615,7 +2687,193 @@ function createPlayerFigure(info) {
   group.add(label);
 
   group.userData.label = label;
+  group.userData.parts = { body: body, torso: torso, legL: legs.L, legR: legs.R, armL: arms.L, armR: arms.R };
+  group.userData.anim = { state: "idle", t: 0, phase: Math.random() * 6 };
+  group.userData.throwHand = "R";
   return group;
+}
+
+// ---------------------------------------------------------------------
+// 선수 동작 (포즈 상태 + 경과 시간으로 관절 각도 계산)
+// ---------------------------------------------------------------------
+function setPose(fig, state) {
+  if (!fig || !fig.userData.anim) return;
+  if (fig.userData.anim.state === state) return;
+  fig.userData.anim.state = state;
+  fig.userData.anim.t = 0;
+}
+
+function animateFigure(fig, dt) {
+  const anim = fig.userData.anim;
+  const parts = fig.userData.parts;
+  if (!anim || !parts) return;
+  anim.t += dt;
+  const t = anim.t;
+  const throwArm = fig.userData.throwHand === "L" ? parts.armL : parts.armR;
+  const gloveArm = fig.userData.throwHand === "L" ? parts.armR : parts.armL;
+
+  // 기본 자세로 초기화
+  parts.body.position.y = 0;
+  parts.body.rotation.set(0, 0, 0);
+  parts.torso.rotation.set(0, 0, 0);
+  parts.legL.rotation.set(0, 0, 0);
+  parts.legR.rotation.set(0, 0, 0);
+  parts.armL.rotation.set(0, 0, 0.08);
+  parts.armR.rotation.set(0, 0, -0.08);
+
+  switch (anim.state) {
+    case "idle":
+      // 가만히 서서 살짝 숨쉬기
+      parts.torso.rotation.x = Math.sin(t * 2 + anim.phase) * 0.02;
+      break;
+
+    case "ready":
+      // 수비 준비 자세: 무릎 굽히고 상체 숙임
+      parts.body.position.y = -0.12;
+      parts.torso.rotation.x = 0.35;
+      parts.legL.rotation.x = -0.35;
+      parts.legR.rotation.x = -0.35;
+      parts.armL.rotation.x = -0.5;
+      parts.armR.rotation.x = -0.5;
+      break;
+
+    case "run":
+    case "walk": {
+      const speed = anim.state === "run" ? 13 : 7;
+      const amp = anim.state === "run" ? 0.9 : 0.45;
+      const phase = t * speed + anim.phase;
+      parts.legL.rotation.x = Math.sin(phase) * amp;
+      parts.legR.rotation.x = -Math.sin(phase) * amp;
+      parts.armL.rotation.x = -Math.sin(phase) * amp * 0.8;
+      parts.armR.rotation.x = Math.sin(phase) * amp * 0.8;
+      parts.torso.rotation.x = anim.state === "run" ? 0.18 : 0.04;
+      parts.body.position.y = Math.abs(Math.sin(phase)) * (anim.state === "run" ? 0.06 : 0.02);
+      break;
+    }
+
+    case "catchHigh":
+      // 뜬공 잡기: 글러브 팔을 머리 위로
+      gloveArm.rotation.x = -2.7;
+      throwArm.rotation.x = -1.6;
+      break;
+
+    case "catchLow":
+      // 땅볼 잡기: 허리 숙이고 두 팔 아래로
+      parts.body.position.y = -0.25;
+      parts.torso.rotation.x = 0.95;
+      parts.legL.rotation.x = -0.6;
+      parts.legR.rotation.x = 0.2;
+      gloveArm.rotation.x = -0.6;
+      throwArm.rotation.x = -0.4;
+      break;
+
+    case "throw": {
+      // 0~0.18초: 팔 뒤로 / 0.18~0.4초: 앞으로 뿌림
+      const k = Math.min(1, t / 0.4);
+      if (k < 0.45) {
+        throwArm.rotation.x = 2.4 * (k / 0.45);
+        parts.torso.rotation.y = -0.5 * (k / 0.45);
+      } else {
+        const f = (k - 0.45) / 0.55;
+        throwArm.rotation.x = 2.4 - 3.8 * f;
+        parts.torso.rotation.y = -0.5 + 0.9 * f;
+        parts.torso.rotation.x = 0.3 * f;
+      }
+      gloveArm.rotation.x = -0.8;
+      break;
+    }
+
+    case "pitch": {
+      // 와인드업(다리 들기) → 투구 (약 0.9초)
+      const k = Math.min(1, t / 0.9);
+      if (k < 0.5) {
+        const f = k / 0.5;
+        parts.legL.rotation.x = -1.3 * f;
+        throwArm.rotation.x = 1.2 * f;
+        gloveArm.rotation.x = -1.0 * f;
+        parts.torso.rotation.y = -0.4 * f;
+      } else {
+        const f = (k - 0.5) / 0.5;
+        parts.legL.rotation.x = -1.3 + 1.6 * f;
+        throwArm.rotation.x = 1.2 + 1.6 * Math.min(1, f * 2) - 4.2 * Math.max(0, f * 2 - 1);
+        parts.torso.rotation.x = 0.45 * f;
+        parts.torso.rotation.y = -0.4 + 0.7 * f;
+        gloveArm.rotation.x = -1.0 + 0.6 * f;
+      }
+      break;
+    }
+
+    case "stance":
+      // 타격 준비: 배트 든 손을 어깨 위로
+      parts.armL.rotation.set(-1.9, 0, 0.6);
+      parts.armR.rotation.set(-1.9, 0, -0.6);
+      parts.body.position.y = -0.05;
+      parts.legL.rotation.z = 0.15;
+      parts.legR.rotation.z = -0.15;
+      break;
+
+    case "swing": {
+      // 0.25초 동안 상체 회전 + 팔 휘두르기
+      const k = Math.min(1, t / 0.25);
+      parts.torso.rotation.y = -1.1 + 2.6 * k;
+      parts.armL.rotation.set(-1.9 + 0.5 * k, 0, 0.6 - 0.6 * k);
+      parts.armR.rotation.set(-1.9 + 0.5 * k, 0, -0.6 + 0.6 * k);
+      break;
+    }
+
+    case "bunt":
+      // 번트 자세: 몸을 투수 쪽으로 돌리고 팔을 앞으로
+      parts.torso.rotation.y = 1.2;
+      parts.armL.rotation.x = -1.5;
+      parts.armR.rotation.x = -1.5;
+      parts.body.position.y = -0.15;
+      break;
+
+    case "crouch":
+      // 포수 앉은 자세
+      parts.body.position.y = -0.45;
+      parts.legL.rotation.x = -1.5;
+      parts.legR.rotation.x = -1.5;
+      parts.torso.rotation.x = 0.15;
+      gloveArm.rotation.x = -1.3;
+      break;
+
+    case "sit":
+      // 관중석에 앉기
+      parts.body.position.y = -0.45;
+      parts.legL.rotation.x = -1.5;
+      parts.legR.rotation.x = -1.5;
+      break;
+
+    case "cheer": {
+      // 만세 + 펄쩍
+      const phase = t * 10;
+      parts.armL.rotation.set(-2.9, 0, 0.3);
+      parts.armR.rotation.set(-2.9, 0, -0.3);
+      parts.body.position.y = Math.abs(Math.sin(phase)) * 0.25;
+      if (t > 2.5) fig.userData.anim.state = fig.userData.baseState || "idle";
+      break;
+    }
+
+    case "wave": {
+      // 손 흔들기
+      parts.armR.rotation.set(-2.6, 0, -0.3 + Math.sin(t * 12) * 0.5);
+      if (t > 2.5) fig.userData.anim.state = fig.userData.baseState || "idle";
+      break;
+    }
+
+    case "slide":
+      // 슬라이딩
+      parts.body.rotation.x = -1.2;
+      parts.body.position.y = 0.15;
+      parts.legL.rotation.x = -0.3;
+      parts.armL.rotation.x = -2.6;
+      parts.armR.rotation.x = -2.6;
+      break;
+
+    default:
+      break;
+  }
 }
 
 // 수비 위치 → 좌표 (기본 위치)
@@ -2835,6 +3093,12 @@ const gv = {
   pollTimer: null,
   toastTimer: null,
   gyro: { on: false, baseAlpha: null, baseBeta: null, baseGamma: null, yaw0: 0, pitch0: 0 },
+  fielders: {}, // 수비 번호 → 선수 모형
+  extraFigures: [], // 다른 관중(아바타) 등
+  play: null, // 진행 중인 플레이 (타구/주루)
+  coveredUntil: -1, // 플레이가 이미 보여준 이벤트 위치 (그 이벤트들은 애니메이션 생략)
+  batterDone: null, // 타석이 끝나 홈에서 사라진 타자 pcode
+  needRebuild: false, // 다음 이벤트에서 주자/타자 모형을 실제 상태로 다시 배치
 };
 
 function $(id) {
@@ -2928,6 +3192,8 @@ function closeGameView() {
   gv.open = false;
   gv.playing = false;
   stopPolling();
+  netStop();
+  social.standing = false;
   $("game-view").classList.remove("open");
   $("gv-seat-picker").style.display = "none";
   if (gv.scene) {
@@ -2990,6 +3256,7 @@ function buildScene() {
   scene.add(fill);
 
   gv.scene = scene;
+  forgetAvatarFigures(); // 다른 관중 모형은 새 장면에 다시 만들어짐
   gv.stadium = buildStadium(scene, gv.params, gv.homeTeam, gv.awayTeam);
 
   // 공 + 궤적
@@ -3019,6 +3286,11 @@ function buildScene() {
   gv.batterKey = "";
   gv.runnerFigures = [null, null, null];
   gv.runnerKeys = ["", "", ""];
+  gv.fielders = {};
+  gv.play = null;
+  gv.coveredUntil = -1;
+  gv.batterDone = null;
+  gv.needRebuild = false;
 }
 
 function renderLoop(now) {
@@ -3033,7 +3305,10 @@ function renderLoop(now) {
 
   tickReplay(dt);
   tickBall(dt * gv.speed);
+  tickPlay(dt * gv.speed);
+  tickActors(dt * gv.speed);
   tickCheer(dt);
+  if (typeof tickSocial === "function") tickSocial(dt);
   updateCamera();
   gv.renderer.render(gv.scene, gv.camera);
 }
@@ -3085,6 +3360,7 @@ function jumpTo(index) {
   gv.ball.active = false;
   gv.ball.mesh.visible = false;
   gv.ball.trail.visible = false;
+  stopPlay();
   applyStateAt(gv.idx, false);
 }
 
@@ -3123,10 +3399,16 @@ function scanUpTo(index) {
   let prevAway = 0;
   let prevHome = 0;
   let lastPitch = null;
+  // 수비 배치: 팀 → { 수비번호 → pcode } (선발에서 시작해 교체·수비위치 변경을 순서대로 반영)
+  const defense = { home: startingDefense("home"), away: startingDefense("away") };
 
   for (let i = 0; i <= index && i < events.length; i++) {
     const ev = events[i];
     const battingTeam = ev.half === "top" ? "away" : "home";
+
+    if (ev.playerChange) {
+      applyPlayerChange(ev.playerChange, defense, orderToPcode);
+    }
 
     if (ev.type === 0) {
       // 이닝 시작: 그 칸을 0으로 열어 둠
@@ -3154,7 +3436,86 @@ function scanUpTo(index) {
     prevAway = ev.gs.awayScore;
     prevHome = ev.gs.homeScore;
   }
-  return { pitchCounts, orderToPcode, recordBefore, line, lastPitch };
+  return { pitchCounts, orderToPcode, recordBefore, line, lastPitch, defense };
+}
+
+// 선발 수비: 라인업에서 타순별 첫 선수(seqno 1)의 수비 위치 + 선발 투수
+function startingDefense(teamKey) {
+  const lineup = gv.model.lineups[teamKey] || {};
+  const map = {};
+  for (const b of lineup.batter || []) {
+    if (Number(b.seqno) !== 1) continue;
+    const pos = Number(b.pos);
+    if (pos >= 1 && pos <= 9) map[pos] = String(b.pcode);
+  }
+  for (const pt of lineup.pitcher || []) {
+    if (Number(pt.seqno) === 1) map[1] = String(pt.pcode);
+  }
+  return map;
+}
+
+// "투수"·"좌익수"… → 수비 번호 (대타·대주자·지명타자는 0 = 수비 안 함)
+function positionNoFromName(name) {
+  const text = String(name || "").trim();
+  if (text.indexOf("지명타자") !== -1) return 0;
+  if (text.indexOf("대타") !== -1 || text.indexOf("대주자") !== -1) return 0;
+  // " 3루수(으)로 수비위치 변경" 처럼 뒤에 말이 붙어 있어도 찾도록 포함 여부로 확인
+  if (text.indexOf("1루수") !== -1) return 3;
+  if (text.indexOf("2루수") !== -1) return 4;
+  if (text.indexOf("3루수") !== -1) return 5;
+  if (text.indexOf("유격수") !== -1) return 6;
+  if (text.indexOf("좌익수") !== -1) return 7;
+  if (text.indexOf("중견수") !== -1) return 8;
+  if (text.indexOf("우익수") !== -1) return 9;
+  if (text.indexOf("투수") !== -1) return 1;
+  if (text.indexOf("포수") !== -1) return 2;
+  return 0;
+}
+
+// 교체 한 건 반영 (네이버 playerChange)
+//   substitution: { inPlayer:{playerId, playerPos}, outPlayer:{playerId, playerPos} }
+//     예) "투수 고영표 : 투수 손동현 (으)로 교체", "1루주자 최형우 : 대주자 박승규 (으)로 교체"
+//   shift: { shiftPlayer:{playerId}, shiftMessage:" 좌익수(으)로 수비위치 변경" }
+function applyPlayerChange(change, defense, orderToPcode) {
+  if (change.type === "substitution") {
+    const inId = String(change.inPlayer.playerId);
+    const outId = String(change.outPlayer.playerId);
+    const outPlayer = gv.model.players[outId];
+    const inPlayer = gv.model.players[inId];
+    const teamKey = (inPlayer && inPlayer.team) || (outPlayer && outPlayer.team);
+    if (!teamKey) {
+      console.log("[교체] 팀을 모름:", change.liveText);
+      return;
+    }
+    // 수비 자리로 들어오면 그 자리를 새 선수로
+    const posNo = positionNoFromName(change.inPlayer.playerPos);
+    if (posNo > 0) {
+      defense[teamKey][posNo] = inId;
+    }
+    // 나간 선수가 다른 수비 자리에 있었으면 비움 (곧 다른 교체/수비위치 변경이 채움)
+    for (const p of Object.keys(defense[teamKey])) {
+      if (defense[teamKey][p] === outId && Number(p) !== posNo) delete defense[teamKey][p];
+    }
+    // 타순: 나간 선수 자리에 들어온 선수 (대타·대주자 포함)
+    const order = outPlayer && outPlayer.batOrder;
+    if (order) {
+      for (const k of Object.keys(orderToPcode[teamKey])) {
+        if (orderToPcode[teamKey][k] === outId) orderToPcode[teamKey][k] = inId;
+      }
+      if (!orderToPcode[teamKey][order] || orderToPcode[teamKey][order] === outId) orderToPcode[teamKey][order] = inId;
+    }
+  } else if (change.type === "shift") {
+    const id = String(change.shiftPlayer.playerId);
+    const player = gv.model.players[id];
+    if (!player || !player.team) return;
+    const posNo = positionNoFromName(change.shiftMessage);
+    const teamDefense = defense[player.team];
+    // 원래 있던 자리에서 빼고
+    for (const p of Object.keys(teamDefense)) {
+      if (teamDefense[p] === id) delete teamDefense[p];
+    }
+    if (posNo > 0) teamDefense[posNo] = id;
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -3168,10 +3529,50 @@ function applyStateAt(index, animate) {
 
   gv.eventDuration = getEventDuration(ev);
 
-  // 수비(투수 포함) / 타자 / 주자
-  updateDefense(ev);
-  updateBatter(ev, scan);
-  updateRunners(ev, scan);
+  if (!animate) {
+    // 점프: 진행 중 플레이 취소하고 상태 그대로 배치
+    stopPlay();
+    gv.coveredUntil = -1;
+    gv.batterDone = null;
+    gv.needRebuild = true;
+  }
+
+  // 새 타석: 수비수 제자리, 타자 새로
+  if (ev.type === 8 || ev.type === 0) {
+    resetFieldersToHome();
+    gv.batterDone = null;
+    gv.needRebuild = true;
+  }
+
+  // 수비(투수 포함, 교체 반영)
+  updateDefense(ev, scan);
+
+  // 이 이벤트가 "진루 플레이"(볼넷·도루·폭투 등)를 시작하는지 먼저 판단
+  // → 그렇다면 주자 모형을 아직 옮기지 않고(이전 상태 그대로) 그 모형들을 뛰게 한다
+  let baseChangeKind = null;
+  if (animate && prev && index > gv.coveredUntil) {
+    if (ev.type === 13 || ev.type === 23) {
+      const parsed = parseResultText(ev.text);
+      if (parsed.kind === "walk" || parsed.kind === "hbp" || parsed.kind === "strikeout" || parsed.kind === "droppedThird") {
+        baseChangeKind = parsed.kind;
+      }
+    } else if ((ev.type === 14 || ev.type === 24) && basesChanged(prev.gs, ev.gs)) {
+      baseChangeKind = "runner";
+    }
+  }
+
+  if (baseChangeKind) {
+    gv.eventDuration = Math.max(gv.eventDuration, startBaseChangePlay(prev.gs, ev, baseChangeKind) + 0.2);
+    if (baseChangeKind !== "runner") gv.batterDone = prev.gs.batter;
+    gv.needRebuild = true; // 다음 이벤트에서 실제 상태로 맞춤
+  } else {
+    if (gv.needRebuild) {
+      rebuildRunnersAndBatter();
+      gv.needRebuild = false;
+    }
+    updateBatter(ev, scan);
+    updateRunners(ev, scan);
+  }
 
   // 화면 정보
   updateHud(ev, scan);
@@ -3181,12 +3582,15 @@ function applyStateAt(index, animate) {
 
   if (!animate) return;
 
-  // 알림 문구
+  // 이미 타구 플레이로 보여준 결과/주자 문장이면 알림만
   showEventToast(ev);
 
-  // 투구 애니메이션
+  // 투구 애니메이션 (타격이면 공이 홈에 닿는 순간 타구 플레이로 이어짐)
   if (ev.type === 1) {
-    const flight = startPitchAnimation(ev);
+    for (const fig of gv.defenseFigures) {
+      if (!fig.userData.path) setPose(fig, fig.userData.basePose || "ready");
+    }
+    const flight = startPitchAnimation(ev, index);
     gv.eventDuration = Math.max(gv.eventDuration, flight + 1.0);
   }
 
@@ -3194,9 +3598,22 @@ function applyStateAt(index, animate) {
   if (prev && (ev.gs.homeScore > prev.gs.homeScore || ev.gs.awayScore > prev.gs.awayScore)) {
     gv.cheerTime = ev.text.indexOf("홈런") !== -1 ? 5 : 3;
   }
-  if (ev.text.indexOf("홈런") !== -1 && (ev.type === 13 || ev.type === 23)) {
-    gv.cheerTime = 5;
+}
+
+function basesChanged(a, b) {
+  return a.base1 !== b.base1 || a.base2 !== b.base2 || a.base3 !== b.base3;
+}
+
+// 주자/타자 모형을 모두 지우고 다음 update에서 새로 만들게 함
+function rebuildRunnersAndBatter() {
+  for (let b = 0; b < 3; b++) {
+    removeFigure(gv.runnerFigures[b]);
+    gv.runnerFigures[b] = null;
+    gv.runnerKeys[b] = "";
   }
+  removeFigure(gv.batterFigure);
+  gv.batterFigure = null;
+  gv.batterKey = "";
 }
 
 // ---------------------------------------------------------------------
@@ -3223,24 +3640,22 @@ function figureForPlayer(player, team, isHome) {
 }
 
 // 그 팀에서 수비 위치 posNo인 선수 (선발 기준 — 수비 교체 반영은 3단계)
-function fielderAt(teamKey, posNo) {
-  const lineup = gv.model.lineups[teamKey] || {};
-  let best = null;
-  for (const b of lineup.batter || []) {
-    if (Number(b.pos) !== posNo) continue;
-    if (!best || Number(b.seqno) < Number(best.seqno)) best = b;
-  }
-  return best ? gv.model.players[best.pcode] : null;
+// 그 시점 수비 위치 posNo에 있는 선수 (교체·수비위치 변경 반영)
+function fielderAt(teamKey, posNo, scan) {
+  const pcode = scan.defense[teamKey][posNo];
+  return pcode ? gv.model.players[pcode] || null : null;
 }
 
-function updateDefense(ev) {
+function updateDefense(ev, scan) {
   const defenseTeamKey = ev.half === "top" ? "home" : "away";
-  const key = defenseTeamKey + ":" + ev.gs.pitcher;
+  // 투수나 수비 배치가 바뀌면 다시 세움
+  const key = defenseTeamKey + ":" + ev.gs.pitcher + ":" + JSON.stringify(scan.defense[defenseTeamKey]);
   if (key === gv.defenseKey) return;
   gv.defenseKey = key;
 
   for (const fig of gv.defenseFigures) removeFigure(fig);
   gv.defenseFigures = [];
+  gv.fielders = {};
 
   const team = defenseTeamKey === "home" ? gv.homeTeam : gv.awayTeam;
   const isHome = defenseTeamKey === "home";
@@ -3250,20 +3665,29 @@ function updateDefense(ev) {
     if (posNo === 1) {
       player = gv.model.players[ev.gs.pitcher] || null; // 지금 던지는 투수
     } else {
-      player = fielderAt(defenseTeamKey, posNo);
+      player = fielderAt(defenseTeamKey, posNo, scan);
     }
     const spot = defensePosition(posNo, gv.params);
     if (!spot) continue;
     const fig = figureForPlayer(player, team, isHome);
     fig.position.set(spot.x, spot.y, spot.z);
+    let lookX = 0;
+    let lookZ = 0;
     if (posNo === 2) {
-      fig.lookAt(0, 0, MOUND_DIST); // 포수는 투수를 봄
-      fig.scale.set(1, 0.68, 1); // 앉은 자세
+      lookZ = MOUND_DIST; // 포수는 투수를 봄
+      fig.userData.basePose = "crouch";
+    } else if (posNo === 1) {
+      fig.userData.basePose = "idle";
     } else {
-      fig.lookAt(0, spot.y, 0); // 나머지는 홈을 봄
+      fig.userData.basePose = "ready";
     }
+    fig.lookAt(lookX, spot.y, lookZ);
+    fig.userData.home = { x: spot.x, y: spot.y, z: spot.z, lookX: lookX, lookZ: lookZ };
+    if (posNo === 1 && player) fig.userData.throwHand = throwingHand(player.hitType);
+    setPose(fig, fig.userData.basePose);
     gv.scene.add(fig);
     gv.defenseFigures.push(fig);
+    gv.fielders[posNo] = fig;
   }
 }
 
@@ -3280,6 +3704,7 @@ function updateBatter(ev, scan) {
   removeFigure(gv.batterFigure);
   gv.batterFigure = null;
   if (!pcode || pcode === "0") return;
+  if (pcode === gv.batterDone) return; // 타석 끝난 타자는 홈에 다시 세우지 않음
 
   const team = battingTeamKey === "home" ? gv.homeTeam : gv.awayTeam;
   const fig = figureForPlayer(player, team, battingTeamKey === "home");
@@ -3287,6 +3712,7 @@ function updateBatter(ev, scan) {
   const x = side === "L" ? -0.95 : 0.95;
   fig.position.set(x, 0, 0.25);
   fig.lookAt(0, 0, 0.25);
+  setPose(fig, "stance");
   gv.scene.add(fig);
   gv.batterFigure = fig;
 }
@@ -3384,17 +3810,31 @@ function syntheticPts(ev) {
   };
 }
 
-function startPitchAnimation(ev) {
+const WINDUP_DELAY = 0.55; // 투수 와인드업 후 공이 손을 떠나기까지 (1배속 초)
+
+function startPitchAnimation(ev, index) {
   const pts = (ev.ptsPitchId && gv.model.ptsById[ev.ptsPitchId]) || syntheticPts(ev);
   const tPlate = timeToReachY(pts, 17 / 12);
   const tCatcher = timeToReachY(pts, -2.2);
   const plate = feetToScene(ptsPositionFeet(pts, tPlate));
 
+  // 이 타석 결과가 번트면 번트 자세
+  let isBunt = false;
+  const group = findResultGroup(index);
+  if (group) {
+    const kind = parseResultText(gv.model.events[group.resultIdx].text).kind;
+    isBunt = kind === "bunt" || kind === "sacBunt" || kind === "buntHit";
+  }
+  if (gv.batterFigure) setPose(gv.batterFigure, isBunt || ev.pitchResult === "W" ? "bunt" : "stance");
+  const pitcherFig = gv.fielders[1];
+  if (pitcherFig) setPose(pitcherFig, "pitch");
+
   const ball = gv.ball;
   ball.active = true;
-  ball.t = 0;
+  ball.t = -WINDUP_DELAY / PITCH_SLOWMO; // 음수 동안은 와인드업 (공 안 보임)
+  ball.swung = false;
   ball.trailPoints = [];
-  ball.path = { pts: pts, tPlate: tPlate, tCatcher: tCatcher, plate: plate, result: ev.pitchResult };
+  ball.path = { pts: pts, tPlate: tPlate, tCatcher: tCatcher, plate: plate, result: ev.pitchResult, index: index, isBunt: isBunt };
 
   // 파울: 홈 뒤/옆으로 튀는 속도 (보는 재미용)
   if (ev.pitchResult === "F" || ev.pitchResult === "W") {
@@ -3403,11 +3843,11 @@ function startPitchAnimation(ev) {
       ? { x: dir * 3, y: 1.5, z: 2 }
       : { x: dir * (6 + Math.random() * 10), y: 10 + Math.random() * 8, z: -(10 + Math.random() * 10) };
   }
-  ball.mesh.visible = true;
-  ball.trail.visible = true;
+  ball.mesh.visible = false;
+  ball.trail.visible = false;
 
   // 화면에 보이는 총 시간 (1배속)
-  return tPlate * PITCH_SLOWMO + 1.0;
+  return WINDUP_DELAY + tPlate * PITCH_SLOWMO + 1.0;
 }
 
 function tickBall(dt) {
@@ -3415,18 +3855,34 @@ function tickBall(dt) {
   if (!ball || !ball.active) return;
   ball.t += dt / PITCH_SLOWMO;
   const path = ball.path;
+  if (ball.t < 0) return; // 와인드업 중
   let pos;
+
+  // 공이 홈 근처에 오면 스윙 (헛스윙·파울·타격)
+  if (!ball.swung && ball.t >= path.tPlate - 0.05) {
+    ball.swung = true;
+    if (gv.batterFigure && !path.isBunt && (path.result === "S" || path.result === "F" || path.result === "H")) {
+      setPose(gv.batterFigure, "swing");
+    }
+    if (gv.fielders[1]) setPose(gv.fielders[1], "ready");
+  }
 
   if (ball.t <= path.tPlate) {
     pos = feetToScene(ptsPositionFeet(path.pts, ball.t));
   } else {
     const after = ball.t - path.tPlate;
     switch (path.result) {
-      case "H": // 타격 → 타구는 4단계에서. 지금은 홈에서 사라짐
+      case "H": { // 타격 → 타구 플레이로 넘김
         ball.active = false;
-        ball.mesh.visible = false;
-        ball.trail.visible = false;
+        const duration = startBattedPlay(path.index);
+        if (gv.play) {
+          gv.coveredUntil = gv.play.coveredUntil;
+          gv.batterDone = gv.model.events[path.index].gs.batter;
+          gv.needRebuild = true; // 결과 문장 이벤트에서 실제 주자 상태로 다시 배치
+          gv.eventDuration = gv.eventTime + duration + 0.3;
+        }
         return;
+      }
       case "F": // 파울
       case "W": {
         const v = path.foulVel;
@@ -3445,19 +3901,13 @@ function tickBall(dt) {
     }
   }
 
+  ball.mesh.visible = true;
   ball.mesh.position.set(pos.x, pos.y, pos.z);
-  ball.trailPoints.push(pos);
-  if (ball.trailPoints.length > 30) ball.trailPoints.shift();
-  const attr = ball.trail.geometry.getAttribute("position");
-  for (let i = 0; i < 30; i++) {
-    const p = ball.trailPoints[Math.min(i, ball.trailPoints.length - 1)];
-    attr.setXYZ(i, p.x, p.y, p.z);
-  }
-  attr.needsUpdate = true;
+  pushTrail(pos);
 
   if (!ball.active) {
     setTimeout(function () {
-      if (!gv.ball.active) {
+      if (!gv.ball.active && !gv.play) {
         gv.ball.mesh.visible = false;
         gv.ball.trail.visible = false;
       }
@@ -3574,6 +4024,7 @@ function setCameraPreset(name) {
   gv.cam.preset = name;
   gv.gyro.baseAlpha = null; // 자이로 기준 다시 잡기
   writeCrowdMatrices(null); // 내 앞 관중 숨기기
+  if (typeof onSeatChanged === "function") onSeatChanged();
 
   const buttons = document.querySelectorAll("#gv-cams button[data-cam]");
   for (const b of buttons) b.classList.toggle("active", b.getAttribute("data-cam") === name);
@@ -3928,6 +4379,10 @@ function mergeLineups(trd) {
 // 버튼 연결
 // ---------------------------------------------------------------------
 function setupGameViewControls() {
+  setupSocialControls();
+  // 콘솔 디버그용
+  window.__gv = gv;
+  window.__jumpTo = jumpTo;
   $("gv-exit").addEventListener("click", closeGameView);
   $("gv-play").addEventListener("click", function () {
     gv.playing = !gv.playing;
@@ -3979,12 +4434,1396 @@ function setupGameViewControls() {
   const seatButtons = document.querySelectorAll("#gv-seat-picker button[data-cam]");
   for (const b of seatButtons) {
     b.addEventListener("click", function () {
+      applyEntryChoices(); // 닉네임·응원팀 저장 + 같은 경기 방 접속
       setCameraPreset(b.getAttribute("data-cam"));
       $("gv-seat-picker").style.display = "none";
       gv.playing = true;
       updatePlayButton();
     });
   }
+}
+
+// =====================================================================
+// 4단계: 타구 결과 문장 파싱 → 타구·수비·주루 재생
+//
+// 문자중계 결과 문장 예 (11/4 한국시리즈 실측)
+//   "유격수 땅볼 아웃 (유격수->1루수 송구아웃)"
+//   "1루수 병살타 아웃 (1루수->유격수->1루수 송구아웃)"
+//   "중견수 왼쪽 뒤 2루타", "좌중간 1루타", "우익수 앞 1루타"
+//   "투수 희생번트 아웃 (투수->2루수 1루 터치아웃)"
+//   주자: "1루주자 김민혁 : 포스아웃 (2루수->유격수 2루 터치아웃)", "3루주자 디아즈 : 태그아웃 (유격수->포수 태그아웃)"
+// =====================================================================
+
+// 홈 / 1루 / 2루 / 3루 / 홈 (주루 경로용, 인덱스 = 베이스 번호)
+const BASE_POINTS = [
+  { x: 0, z: 0.3 },
+  { x: FIRST_BASE.x, z: FIRST_BASE.z },
+  { x: SECOND_BASE.x, z: SECOND_BASE.z },
+  { x: THIRD_BASE.x, z: THIRD_BASE.z },
+  { x: 0, z: 0.3 },
+];
+
+// 수비 위치 이름 → 번호
+function fielderPosNo(name) {
+  switch (name) {
+    case "투수": return 1;
+    case "포수": return 2;
+    case "1루수": return 3;
+    case "2루수": return 4;
+    case "3루수": return 5;
+    case "유격수": return 6;
+    case "좌익수": return 7;
+    case "중견수": return 8;
+    case "우익수": return 9;
+    default: return 0;
+  }
+}
+
+// 문장 맨 앞의 방향 단어 (긴 단어부터 확인)
+const DIRECTION_WORDS = ["좌중간", "우중간", "좌익수", "중견수", "우익수", "1루수", "2루수", "3루수", "유격수", "투수", "포수"];
+
+// ---------------------------------------------------------------------
+// 결과 문장 파서 (케이스별로 명시적으로)
+// ---------------------------------------------------------------------
+function parseResultText(text) {
+  const body = text.indexOf(" : ") !== -1 ? text.split(" : ")[1] : text;
+  const parsed = {
+    body: body,
+    kind: "other",
+    direction: null, // 방향 단어 (좌익수, 좌중간 ...)
+    left: false, // "왼쪽"
+    right: false, // "오른쪽"
+    front: false, // "앞"
+    deep: false, // "뒤", "깊숙한"
+    line: false, // "선상"
+    chain: [], // 송구 순서 [수비번호...]
+    outBase: null, // 아웃된 베이스 (1,2,3,4=홈)
+    error: body.indexOf("실책") !== -1,
+  };
+
+  // 1) 종류 — 위에서부터 먼저 맞는 것
+  if (body.indexOf("홈런") !== -1) parsed.kind = "homerun";
+  else if (body.indexOf("3루타") !== -1) parsed.kind = "triple";
+  else if (body.indexOf("2루타") !== -1) parsed.kind = "double";
+  else if (body.indexOf("내야안타") !== -1) parsed.kind = "infieldHit";
+  else if (body.indexOf("번트안타") !== -1) parsed.kind = "buntHit";
+  else if (body.indexOf("1루타") !== -1 || body.indexOf("안타") !== -1) parsed.kind = "single";
+  else if (body.indexOf("희생플라이") !== -1) parsed.kind = "sacFly";
+  else if (body.indexOf("희생번트") !== -1) parsed.kind = "sacBunt";
+  else if (body.indexOf("병살") !== -1 || body.indexOf("삼중살") !== -1) parsed.kind = "doublePlay";
+  else if (body.indexOf("낫 아웃") !== -1 || body.indexOf("낫아웃") !== -1) parsed.kind = "droppedThird";
+  else if (body.indexOf("삼진") !== -1) parsed.kind = "strikeout";
+  else if (body.indexOf("고의4구") !== -1 || body.indexOf("볼넷") !== -1) parsed.kind = "walk";
+  else if (body.indexOf("몸에 맞는") !== -1) parsed.kind = "hbp";
+  else if (body.indexOf("파울플라이") !== -1) parsed.kind = "foulFly";
+  else if (body.indexOf("번트") !== -1) parsed.kind = "bunt";
+  else if (body.indexOf("플라이") !== -1) parsed.kind = "fly";
+  else if (body.indexOf("라인드라이브") !== -1) parsed.kind = "liner";
+  else if (body.indexOf("땅볼") !== -1) parsed.kind = "ground";
+
+  // 2) 방향
+  for (const word of DIRECTION_WORDS) {
+    if (body.indexOf(word) === 0) {
+      parsed.direction = word;
+      break;
+    }
+  }
+
+  // 3) 위치 수식어
+  const head = body.split("(")[0];
+  if (head.indexOf("왼쪽") !== -1) parsed.left = true;
+  if (head.indexOf("오른쪽") !== -1) parsed.right = true;
+  if (head.indexOf(" 앞") !== -1) parsed.front = true;
+  if (head.indexOf(" 뒤") !== -1 || head.indexOf("깊숙") !== -1) parsed.deep = true;
+  if (head.indexOf("선상") !== -1) parsed.line = true;
+
+  // 4) 괄호 안 송구 순서
+  parseChainInto(body, parsed);
+  return parsed;
+}
+
+// "(1루수->유격수->1루수 송구아웃)" → chain [3, 6, 3], "(2루수->유격수 2루 터치아웃)" → outBase 2
+function parseChainInto(body, target) {
+  const m = /\(([^)]*)\)/.exec(body);
+  if (!m) return;
+  const inner = m[1];
+  const tokens = inner.split("->");
+  for (const token of tokens) {
+    const word = token.trim().split(" ")[0];
+    const posNo = fielderPosNo(word);
+    if (posNo > 0) target.chain.push(posNo);
+  }
+  const baseMatch = /(\d)루 터치아웃/.exec(inner);
+  if (baseMatch) target.outBase = Number(baseMatch[1]);
+  else if (inner.indexOf("홈 터치아웃") !== -1) target.outBase = 4;
+  else if (inner.indexOf("태그아웃") !== -1 && target.chain.length > 0 && target.chain[target.chain.length - 1] === 2) target.outBase = 4;
+}
+
+// ---------------------------------------------------------------------
+// 방향 → 기본 각도·거리 (각도: 0 중앙, + 1루/우익 쪽, - 3루/좌익 쪽)
+// ---------------------------------------------------------------------
+function directionBase(direction, p) {
+  switch (direction) {
+    case "투수": return { deg: 0, dist: 17, outfield: false };
+    case "포수": return { deg: 0, dist: 3, outfield: false };
+    case "1루수": return { deg: 36, dist: 30, outfield: false };
+    case "2루수": return { deg: 13, dist: 36, outfield: false };
+    case "3루수": return { deg: -36, dist: 30, outfield: false };
+    case "유격수": return { deg: -13, dist: 36, outfield: false };
+    case "좌익수": return { deg: -27, dist: fenceDistanceAt(-27, p) * 0.72, outfield: true };
+    case "중견수": return { deg: 0, dist: fenceDistanceAt(0, p) * 0.74, outfield: true };
+    case "우익수": return { deg: 27, dist: fenceDistanceAt(27, p) * 0.72, outfield: true };
+    case "좌중간": return { deg: -14, dist: fenceDistanceAt(-14, p) * 0.75, outfield: true };
+    case "우중간": return { deg: 14, dist: fenceDistanceAt(14, p) * 0.75, outfield: true };
+    default: return { deg: 0, dist: 40, outfield: false };
+  }
+}
+
+// 방향 단어 → 그 공을 처리하는 수비 번호 (좌중간/우중간은 중견수)
+function directionFielder(direction) {
+  switch (direction) {
+    case "좌중간": return 8;
+    case "우중간": return 8;
+    default: return fielderPosNo(direction);
+  }
+}
+
+function randomBetween(a, b) {
+  return a + Math.random() * (b - a);
+}
+
+// ---------------------------------------------------------------------
+// 타구 계획: 공이 어디로 어떻게 가고, 누가 어디서 잡는지
+// 반환: { segments:[공 이동 구간], fielder, fieldPoint, catchTime, catchPose, isOut }
+// ---------------------------------------------------------------------
+function planBattedBall(parsed, p) {
+  const dir = directionBase(parsed.direction || "중견수", p);
+  let deg = dir.deg;
+  if (parsed.left) deg -= dir.outfield ? 7 : 5;
+  if (parsed.right) deg += dir.outfield ? 7 : 5;
+  if (parsed.line) deg = deg < 0 ? -43 : 43;
+  deg += randomBetween(-2.5, 2.5); // 매번 조금씩 다르게
+
+  const fence = fenceDistanceAt(Math.max(-45, Math.min(45, deg)), p);
+  const contact = { x: 0, y: 1.0, z: 0.6 };
+  const fielderNo = parsed.chain.length > 0 ? parsed.chain[0] : directionFielder(parsed.direction);
+  const plan = {
+    fielder: fielderNo,
+    segments: [],
+    fieldPoint: null,
+    catchTime: 0,
+    catchPose: "catchLow",
+    isOut: false,
+    ballEnd: null,
+  };
+
+  function ground(fromPt, toPt, speed) {
+    const dist = Math.hypot(toPt.x - fromPt.x, toPt.z - fromPt.z);
+    return { kind: "ground", from: fromPt, to: toPt, duration: Math.max(0.35, dist / speed) };
+  }
+  function arc(fromPt, toPt, apex, duration) {
+    return { kind: "arc", from: fromPt, to: toPt, apex: apex, duration: duration };
+  }
+  function pointAt(d, dist, y) {
+    const pt = fieldPoint(d, dist);
+    return { x: pt.x, y: y || 0.12, z: pt.z };
+  }
+
+  switch (parsed.kind) {
+    case "ground":
+    case "doublePlay": {
+      // 땅볼: 해당 내야수 근처 지면, 빠르게
+      const fieldDist = dir.outfield ? 32 : Math.max(8, dir.dist - 2);
+      const target = pointAt(deg, fieldDist);
+      plan.segments.push(ground(contact, target, 26));
+      plan.fieldPoint = target;
+      plan.catchPose = "catchLow";
+      plan.isOut = true;
+      break;
+    }
+    case "infieldHit":
+    case "buntHit":
+    case "bunt":
+    case "sacBunt": {
+      // 번트/내야안타: 홈 앞 3~10m, 느리게
+      const isBunt = parsed.kind !== "infieldHit";
+      const dist = isBunt ? randomBetween(5, 9) : randomBetween(12, 20);
+      const target = pointAt(deg, dist);
+      plan.segments.push(ground(contact, target, isBunt ? 7 : 14));
+      plan.fieldPoint = target;
+      plan.catchPose = "catchLow";
+      plan.isOut = parsed.kind === "sacBunt" || parsed.kind === "bunt";
+      break;
+    }
+    case "liner": {
+      const target = pointAt(deg, dir.dist, 1.5);
+      plan.segments.push(arc(contact, target, 1.2, Math.max(0.45, dir.dist / 38)));
+      plan.fieldPoint = target;
+      plan.catchPose = "catchHigh";
+      plan.isOut = true;
+      break;
+    }
+    case "fly":
+    case "sacFly": {
+      // 뜬공: 수비수 근처, 높은 포물선
+      let dist = dir.dist + randomBetween(-4, 4);
+      if (parsed.deep) dist = Math.min(fence - 4, dist + 12);
+      if (parsed.front) dist -= 10;
+      const target = pointAt(deg, dist, 2.0);
+      const hang = dir.outfield ? randomBetween(3.6, 4.6) : randomBetween(3.0, 3.6);
+      plan.segments.push(arc(contact, target, dir.outfield ? 30 : 26, hang));
+      plan.fieldPoint = target;
+      plan.catchPose = "catchHigh";
+      plan.isOut = !parsed.error;
+      break;
+    }
+    case "foulFly": {
+      // 파울플라이: 그 수비수 쪽 파울 지역
+      let target;
+      if (parsed.direction === "포수") target = { x: randomBetween(-5, 5), y: 1.8, z: randomBetween(-8, -4) };
+      else {
+        const side = dir.deg >= 0 ? 1 : -1;
+        target = pointAt(side * 52, randomBetween(22, 34), 1.8);
+      }
+      plan.segments.push(arc(contact, target, 24, 3.2));
+      plan.fieldPoint = target;
+      plan.catchPose = "catchHigh";
+      plan.isOut = true;
+      break;
+    }
+    case "single": {
+      if (!dir.outfield) {
+        // 내야수 방향 안타: 내야를 빠져나가는 땅볼
+        const through = pointAt(deg, 55);
+        plan.segments.push(ground(contact, through, 28));
+        plan.fieldPoint = through;
+        plan.fielder = deg < -20 ? 7 : deg > 20 ? 9 : 8;
+      } else if (parsed.front || parsed.direction === "좌중간" || parsed.direction === "우중간") {
+        // "~앞 안타": 외야수 앞 10~20m 바운드
+        const landDist = dir.dist - randomBetween(10, 20);
+        const land = pointAt(deg, landDist);
+        const roll = pointAt(deg, landDist + 7);
+        plan.segments.push(arc(contact, land, 7, 1.3));
+        plan.segments.push(ground(land, roll, 10));
+        plan.fieldPoint = roll;
+      } else {
+        // 왼쪽/오른쪽 1루타: 외야수 옆으로 굴러감
+        const land = pointAt(deg, dir.dist - 6);
+        const roll = pointAt(deg, dir.dist + 4);
+        plan.segments.push(arc(contact, land, 5, 1.2));
+        plan.segments.push(ground(land, roll, 12));
+        plan.fieldPoint = roll;
+      }
+      plan.catchPose = "catchLow";
+      break;
+    }
+    case "double": {
+      // 2루타: 좌중간/우중간 갭 또는 외야수 옆 → 펜스 쪽으로 굴러감
+      const land = pointAt(deg, fence * 0.8);
+      const roll = pointAt(deg, fence - 2.5);
+      plan.segments.push(arc(contact, land, 16, 2.4));
+      plan.segments.push(ground(land, roll, 9));
+      plan.fieldPoint = roll;
+      plan.catchPose = "catchLow";
+      break;
+    }
+    case "triple": {
+      // 3루타: 외야 깊숙한 곳 / 펜스 근처
+      const land = pointAt(deg, fence * 0.92);
+      const wall = pointAt(deg, fence - 0.8, 1.5);
+      const bounce = pointAt(deg, fence - 9);
+      plan.segments.push(arc(contact, land, 22, 3.0));
+      plan.segments.push(arc(land, wall, 1.0, 0.4));
+      plan.segments.push(ground(wall, bounce, 9));
+      plan.fieldPoint = bounce;
+      plan.catchPose = "catchLow";
+      break;
+    }
+    case "homerun": {
+      // 홈런: 그 방향 펜스 너머 관중석 (구장별 펜스 거리 반영)
+      const over = pointAt(deg, fence + randomBetween(8, 22), fenceHeightAt(deg, p) + 5);
+      plan.segments.push(arc(contact, over, 32, 4.4));
+      plan.fieldPoint = pointAt(deg, fence - 2);
+      plan.catchPose = "idle";
+      plan.ballEnd = over;
+      break;
+    }
+    default: {
+      // 정보가 부족한 플레이: 가장 자연스러운 기본 동작 = 중견수 쪽 땅볼
+      console.log("[타구] 기본 동작으로 재생:", parsed.body);
+      const target = pointAt(deg, dir.outfield ? 40 : dir.dist);
+      plan.segments.push(ground(contact, target, 24));
+      plan.fieldPoint = target;
+    }
+  }
+
+  // 실책: 공을 놓쳐서 옆으로 튐
+  if (parsed.error && plan.fieldPoint) {
+    const fp = plan.fieldPoint;
+    const away = { x: fp.x + randomBetween(-3, 3), y: 0.1, z: fp.z + randomBetween(1, 4) };
+    plan.segments.push(arc(fp, away, 0.8, 0.5));
+    plan.fieldPoint = away;
+    plan.isOut = false;
+  }
+
+  let total = 0;
+  for (const seg of plan.segments) total += seg.duration;
+  plan.catchTime = total;
+  if (!plan.ballEnd) plan.ballEnd = plan.segments[plan.segments.length - 1].to;
+  return plan;
+}
+
+// 받는 수비수가 서는 자리 (송구를 받을 베이스)
+function coverPoint(posNo, outBase, isLast) {
+  if (isLast && outBase) {
+    return BASE_POINTS[outBase === 4 ? 0 : outBase];
+  }
+  switch (posNo) {
+    case 1: return BASE_POINTS[1]; // 투수 → 1루 커버
+    case 2: return BASE_POINTS[0]; // 포수 → 홈
+    case 3: return BASE_POINTS[1]; // 1루수 → 1루
+    case 4: return BASE_POINTS[2]; // 2루수 → 2루
+    case 5: return BASE_POINTS[3]; // 3루수 → 3루
+    case 6: return BASE_POINTS[2]; // 유격수 → 2루
+    default: return BASE_POINTS[2];
+  }
+}
+
+// =====================================================================
+// 플레이 재생기: 시간표(스케줄)대로 공·수비수·주자를 움직인다
+// =====================================================================
+function stopPlay() {
+  gv.play = null;
+  if (gv.ball) {
+    gv.ball.playActive = false;
+  }
+  for (const fig of gv.defenseFigures) {
+    fig.userData.path = null;
+  }
+}
+
+function newPlay() {
+  gv.play = {
+    t: 0,
+    duration: 0,
+    scheduled: [], // { at, fn, done }
+    ballSegments: [], // { start, seg } 또는 { start, end, holdFig }
+  };
+  return gv.play;
+}
+
+function schedule(play, at, fn) {
+  play.scheduled.push({ at: at, fn: fn, done: false });
+  play.duration = Math.max(play.duration, at);
+}
+
+// 공을 구간들로 보낸다. 반환: 끝나는 시간
+function scheduleBall(play, start, segments) {
+  let t = start;
+  for (const seg of segments) {
+    play.ballSegments.push({ start: t, end: t + seg.duration, seg: seg });
+    t += seg.duration;
+  }
+  play.duration = Math.max(play.duration, t);
+  return t;
+}
+
+// 수비수가 공을 들고 있는 구간 (손 위치를 따라감)
+function scheduleHold(play, start, end, fig) {
+  play.ballSegments.push({ start: start, end: end, hold: fig });
+}
+
+// 송구: 한 사람 손 → 다른 사람 손 (32m/s 직선 + 약간 포물선)
+function throwSegment(fromPt, toPt) {
+  const dist = Math.hypot(toPt.x - fromPt.x, toPt.z - fromPt.z);
+  return { kind: "arc", from: { x: fromPt.x, y: 1.6, z: fromPt.z }, to: { x: toPt.x, y: 1.4, z: toPt.z }, apex: Math.min(3, dist / 15), duration: Math.max(0.25, dist / 32) };
+}
+
+function figPoint(fig) {
+  return { x: fig.position.x, y: 1.4, z: fig.position.z };
+}
+
+// 경로 이동 지시 (경로 = 점 목록, 속도 m/s)
+function sendAlong(fig, points, speed, pose, onArrive) {
+  if (!fig) return;
+  fig.userData.path = { points: points.slice(), speed: speed, pose: pose || "run", onArrive: onArrive || null };
+  setPose(fig, pose || "run");
+}
+
+function tickPlay(dt) {
+  const play = gv.play;
+  if (!play) return;
+  play.t += dt;
+  // 끝난 플레이 정리
+  if (play.t > play.duration + 0.5) {
+    gv.play = null;
+    if (!gv.ball.active) {
+      gv.ball.mesh.visible = false;
+      gv.ball.trail.visible = false;
+    }
+    return;
+  }
+  for (const item of play.scheduled) {
+    if (!item.done && play.t >= item.at) {
+      item.done = true;
+      item.fn();
+    }
+  }
+
+  // 공 위치
+  const ball = gv.ball;
+  let current = null;
+  for (const b of play.ballSegments) {
+    if (play.t >= b.start && play.t <= b.end) current = b;
+  }
+  if (current) {
+    ball.mesh.visible = true;
+    let pos;
+    if (current.hold) {
+      const f = current.hold;
+      pos = { x: f.position.x, y: 1.3, z: f.position.z };
+    } else {
+      const seg = current.seg;
+      const k = Math.min(1, (play.t - current.start) / seg.duration);
+      pos = segmentPosition(seg, k);
+    }
+    ball.mesh.position.set(pos.x, pos.y, pos.z);
+    pushTrail(pos);
+  }
+}
+
+function segmentPosition(seg, k) {
+  const x = seg.from.x + (seg.to.x - seg.from.x) * k;
+  const z = seg.from.z + (seg.to.z - seg.from.z) * k;
+  if (seg.kind === "ground") {
+    // 통통 튀며 굴러감 (튀는 높이가 점점 작아짐)
+    const bounce = Math.abs(Math.sin(k * Math.PI * 4)) * 0.6 * (1 - k);
+    return { x: x, y: 0.1 + bounce, z: z };
+  }
+  // 포물선: 직선 높이 + 꼭대기 높이
+  const y = seg.from.y + (seg.to.y - seg.from.y) * k + seg.apex * 4 * k * (1 - k);
+  return { x: x, y: Math.max(0.08, y), z: z };
+}
+
+function pushTrail(pos) {
+  const ball = gv.ball;
+  ball.trail.visible = true;
+  ball.trailPoints.push(pos);
+  if (ball.trailPoints.length > 30) ball.trailPoints.shift();
+  const attr = ball.trail.geometry.getAttribute("position");
+  for (let i = 0; i < 30; i++) {
+    const p = ball.trailPoints[Math.min(i, ball.trailPoints.length - 1)];
+    attr.setXYZ(i, p.x, p.y, p.z);
+  }
+  attr.needsUpdate = true;
+}
+
+// 모든 선수: 경로 따라 이동 + 관절 애니메이션
+function tickActors(dt) {
+  const figures = gv.defenseFigures.concat([gv.batterFigure, gv.umpire], gv.runnerFigures, gv.extraFigures || []);
+  for (const fig of figures) {
+    if (!fig) continue;
+    const path = fig.userData.path;
+    if (path && path.points.length > 0) {
+      const target = path.points[0];
+      const dx = target.x - fig.position.x;
+      const dz = target.z - fig.position.z;
+      const dist = Math.hypot(dx, dz);
+      const step = path.speed * dt;
+      if (dist <= step) {
+        fig.position.x = target.x;
+        fig.position.z = target.z;
+        path.points.shift();
+        if (path.points.length === 0) {
+          fig.userData.path = null;
+          if (path.onArrive) path.onArrive();
+          else setPose(fig, "idle");
+        }
+      } else {
+        fig.position.x += (dx / dist) * step;
+        fig.position.z += (dz / dist) * step;
+        fig.rotation.y = Math.atan2(dx, dz); // 가는 방향을 봄
+      }
+    }
+    animateFigure(fig, dt);
+  }
+}
+
+// ---------------------------------------------------------------------
+// 주루: 경기 전/후 상태(currentGameState)를 비교해서 누가 어디로 가는지 정한다
+// 기록과 반드시 일치: 애니메이션이 끝나면 applyStateAt이 실제 상태로 다시 배치
+// ---------------------------------------------------------------------
+function basePath(fromBase, toBase) {
+  const points = [];
+  for (let b = fromBase + 1; b <= toBase; b++) points.push(BASE_POINTS[b]);
+  return points;
+}
+
+// before/after: gs, opts: { batterOrder, kind, startAt, speed }
+function scheduleBaseRunning(play, before, after, battingTeamKey, opts) {
+  const beforeBases = [0, before.base1, before.base2, before.base3]; // 베이스 → 타순
+  const afterBaseOf = {}; // 타순 → 베이스
+  if (after.base1) afterBaseOf[after.base1] = 1;
+  if (after.base2) afterBaseOf[after.base2] = 2;
+  if (after.base3) afterBaseOf[after.base3] = 3;
+
+  const scoreKey = battingTeamKey === "home" ? "homeScore" : "awayScore";
+  let runs = Math.max(0, after[scoreKey] - before[scoreKey]);
+  const speed = opts.speed || 7.5;
+  const startAt = opts.startAt || 0;
+  let endAt = startAt;
+
+  // 홈런: 타자 포함 전원 홈인
+  if (opts.kind === "homerun") runs = Math.max(runs, 1);
+
+  // 앞 주자부터 (3루 → 1루)
+  for (let b = 3; b >= 1; b--) {
+    const order = beforeBases[b];
+    if (!order) continue;
+    const fig = gv.runnerFigures[b - 1];
+    let toBase;
+    let out = false;
+    if (afterBaseOf[order]) {
+      toBase = afterBaseOf[order];
+    } else if (runs > 0) {
+      toBase = 4;
+      runs--;
+    } else {
+      toBase = Math.min(4, b + 1); // 다음 베이스 가다가 아웃
+      out = true;
+    }
+    if (toBase <= b || !fig) continue;
+    const path = basePath(b, toBase);
+    const length = path.length * BASE_DIST;
+    const arrive = startAt + length / speed;
+    endAt = Math.max(endAt, arrive);
+    schedule(play, startAt, function () {
+      sendAlong(fig, path, speed, "run", function () {
+        setPose(fig, out ? "slide" : "idle");
+      });
+    });
+    if (out || toBase === 4) {
+      schedule(play, arrive + 0.6, function () { fig.visible = false; });
+    }
+  }
+
+  // 타자
+  const batterFig = gv.batterFigure;
+  if (batterFig && opts.batterOrder !== null && opts.batterOrder !== undefined) {
+    let toBase = afterBaseOf[opts.batterOrder] || 0;
+    if (opts.kind === "homerun") toBase = 4;
+    const outBatter = toBase === 0;
+    if (outBatter) {
+      if (opts.kind === "strikeout") {
+        schedule(play, startAt + 0.8, function () { batterFig.visible = false; });
+      } else {
+        // 아웃된 타자: 1루까지 뛰다가 사라짐 (뜬공이면 중간에 멈춤)
+        const partial = opts.kind === "fly" || opts.kind === "foulFly" || opts.kind === "liner" || opts.kind === "sacFly";
+        const goal = partial
+          ? { x: FIRST_BASE.x * 0.45, z: FIRST_BASE.z * 0.45 }
+          : { x: FIRST_BASE.x - 1.5, z: FIRST_BASE.z + 1.5 };
+        const length = Math.hypot(goal.x, goal.z);
+        const arrive = startAt + 0.25 + length / speed;
+        endAt = Math.max(endAt, arrive);
+        schedule(play, startAt + 0.25, function () {
+          sendAlong(batterFig, [goal], partial ? speed * 0.6 : speed, "run", function () { setPose(batterFig, "idle"); });
+        });
+        schedule(play, arrive + 0.8, function () { batterFig.visible = false; });
+      }
+    } else {
+      const trot = opts.kind === "homerun" ? 8.5 : speed;
+      const path = basePath(0, toBase);
+      const arrive = startAt + 0.25 + (path.length * BASE_DIST) / trot;
+      endAt = Math.max(endAt, arrive);
+      schedule(play, startAt + 0.25, function () {
+        sendAlong(batterFig, path, trot, "run", function () { setPose(batterFig, "idle"); });
+      });
+      if (toBase === 4) schedule(play, arrive + 0.5, function () { batterFig.visible = false; });
+    }
+  }
+  play.duration = Math.max(play.duration, endAt + 0.4);
+  return endAt;
+}
+
+// ---------------------------------------------------------------------
+// 타격(투구 결과 H) 이후 플레이 전체 만들기
+//   pitchIndex: 타격된 투구 이벤트 위치
+//   반환: 플레이 길이(초, 1배속)
+// ---------------------------------------------------------------------
+function findResultGroup(pitchIndex) {
+  const events = gv.model.events;
+  let resultIdx = -1;
+  for (let i = pitchIndex + 1; i < events.length; i++) {
+    const t = events[i].type;
+    if (t === 13 || t === 23) {
+      resultIdx = i;
+      break;
+    }
+    if (t === 8 || t === 0) break; // 다음 타석으로 넘어가면 중단
+  }
+  if (resultIdx < 0) return null;
+  let last = resultIdx;
+  for (let i = resultIdx + 1; i < events.length; i++) {
+    const t = events[i].type;
+    if (t === 14 || t === 24 || t === 7) last = i;
+    else break;
+  }
+  return { resultIdx: resultIdx, lastIdx: last };
+}
+
+function startBattedPlay(pitchIndex) {
+  const events = gv.model.events;
+  const group = findResultGroup(pitchIndex);
+  if (!group) return 0;
+  const resultEv = events[group.resultIdx];
+  const before = events[pitchIndex].gs;
+  const after = events[group.lastIdx].gs;
+  const parsed = parseResultText(resultEv.text);
+
+  // 송구 순서가 결과 문장에 없으면 주자 문장(포스아웃 등)에서 가져옴
+  if (parsed.chain.length === 0) {
+    for (let i = group.resultIdx + 1; i <= group.lastIdx; i++) {
+      const runnerParsed = { chain: [], outBase: null };
+      parseChainInto(events[i].text, runnerParsed);
+      if (runnerParsed.chain.length > 0) {
+        parsed.chain = runnerParsed.chain;
+        parsed.outBase = runnerParsed.outBase;
+        break;
+      }
+    }
+  }
+  console.log("[타구]", resultEv.text, parsed);
+
+  const plan = planBattedBall(parsed, gv.params);
+  const play = newPlay();
+  play.coveredUntil = group.lastIdx; // 이 플레이가 대신 보여준 이벤트 (결과·주자 문장)
+
+  // 1) 공
+  const catchAt = scheduleBall(play, 0, plan.segments);
+
+  // 2) 처리하는 수비수: 공이 도착할 때쯤 그 자리에 오도록
+  const fielder = gv.fielders[plan.fielder];
+  let throwStart = catchAt;
+  if (fielder && plan.fieldPoint && parsed.kind !== "homerun") {
+    const dist = Math.hypot(plan.fieldPoint.x - fielder.position.x, plan.fieldPoint.z - fielder.position.z);
+    const runSpeed = Math.min(9.5, Math.max(4, dist / Math.max(0.4, catchAt - 0.15)));
+    const reach = dist / runSpeed;
+    schedule(play, 0.05, function () {
+      sendAlong(fielder, [plan.fieldPoint], runSpeed, "run", function () {
+        setPose(fielder, plan.catchPose);
+      });
+    });
+    throwStart = Math.max(catchAt, 0.05 + reach) + 0.3; // 잡고 0.3초 뒤 송구
+    schedule(play, Math.max(catchAt, 0.05 + reach), function () { setPose(fielder, plan.catchPose); });
+    scheduleHold(play, Math.max(catchAt, 0.05 + reach), throwStart, fielder);
+  } else if (parsed.kind === "homerun" && fielder) {
+    // 홈런: 펜스까지 쫓아가서 올려다봄
+    schedule(play, 0.05, function () {
+      sendAlong(fielder, [plan.fieldPoint], 7.5, "run", function () { setPose(fielder, "catchHigh"); });
+    });
+    schedule(play, 4.6, function () { gv.ball.mesh.visible = false; });
+  }
+
+  // 3) 송구 순서대로 (6-4-3 등)
+  let holder = fielder;
+  let t = throwStart;
+  if (fielder && plan.isOut && parsed.chain.length > 1) {
+    for (let i = 1; i < parsed.chain.length; i++) {
+      const receiverNo = parsed.chain[i];
+      const receiver = gv.fielders[receiverNo];
+      if (!receiver || !holder) break;
+      const isLast = i === parsed.chain.length - 1;
+      const cover = coverPoint(receiverNo, parsed.outBase || (parsed.kind === "doublePlay" && isLast ? 1 : null), isLast);
+      // 받는 사람은 바로 베이스 커버하러 출발
+      const coverTarget = { x: cover.x + 0.6, z: cover.z };
+      schedule(play, 0.2, (function (r, c) {
+        return function () { sendAlong(r, [c], 7, "run", function () { setPose(r, "catchHigh"); r.lookAt(holder.position.x, 0, holder.position.z); }); };
+      })(receiver, coverTarget));
+      const from = holder;
+      schedule(play, t, (function (f, r) {
+        return function () { f.lookAt(r.position.x, 0, r.position.z); setPose(f, "throw"); };
+      })(from, receiver));
+      const seg = throwSegment(holder === fielder ? plan.fieldPoint : coverPoint(parsed.chain[i - 1], null, false), coverTarget);
+      const end = scheduleBall(play, t + 0.15, [seg]);
+      schedule(play, end, (function (r) { return function () { setPose(r, "catchHigh"); }; })(receiver));
+      // 다음 송구 전 잠깐 들고 있음
+      scheduleHold(play, end, end + 0.3, receiver);
+      holder = receiver;
+      t = end + 0.3;
+    }
+  } else if (fielder && plan.isOut && parsed.chain.length === 1 && parsed.outBase) {
+    // 혼자 처리 (1루수 1루 터치아웃 등): 베이스까지 달려가 밟음
+    const base = BASE_POINTS[parsed.outBase === 4 ? 0 : parsed.outBase];
+    schedule(play, throwStart, function () { sendAlong(fielder, [base], 6, "run", function () { setPose(fielder, "catchHigh"); }); });
+    const reach = Math.hypot(base.x - plan.fieldPoint.x, base.z - plan.fieldPoint.z) / 6;
+    scheduleHold(play, throwStart, throwStart + reach, fielder);
+    t = throwStart + reach;
+  } else if (fielder && !plan.isOut && parsed.kind !== "homerun") {
+    // 안타: 잡아서 내야(2루 쪽)로 송구
+    schedule(play, throwStart, function () { fielder.lookAt(SECOND_BASE.x, 0, SECOND_BASE.z); setPose(fielder, "throw"); });
+    const relay = { x: SECOND_BASE.x + 2, z: SECOND_BASE.z - 3 };
+    const seg = throwSegment(plan.fieldPoint, relay);
+    t = scheduleBall(play, throwStart + 0.15, [seg]);
+  }
+
+  // 4) 주자 + 타자 (공을 친 순간 출발)
+  const battingTeamKey = events[pitchIndex].half === "top" ? "away" : "home";
+  const batter = gv.model.players[events[pitchIndex].gs.batter];
+  scheduleBaseRunning(play, before, after, battingTeamKey, {
+    batterOrder: batter ? batter.batOrder : null,
+    kind: parsed.kind,
+    startAt: 0,
+  });
+
+  // 5) 득점·홈런 → 관중 환호
+  if (parsed.kind === "homerun") schedule(play, 2.0, function () { gv.cheerTime = 5; });
+
+  play.duration = Math.max(play.duration, t) + 0.8;
+  play.duration = Math.min(play.duration, 16);
+  return play.duration;
+}
+
+// 타격이 아닌 진루(볼넷, 몸에 맞는 공, 도루, 폭투, 보크…): 상태 차이만큼 뛰기
+function startBaseChangePlay(prevGs, ev, kind) {
+  const battingTeamKey = ev.half === "top" ? "away" : "home";
+  const play = newPlay();
+  const batter = gv.model.players[prevGs.batter];
+  const includeBatter = kind === "walk" || kind === "hbp" || kind === "strikeout" || kind === "droppedThird";
+  scheduleBaseRunning(play, prevGs, ev.gs, battingTeamKey, {
+    batterOrder: includeBatter && batter ? batter.batOrder : null,
+    kind: kind,
+    startAt: 0.1,
+    speed: kind === "walk" || kind === "hbp" ? 4.5 : 7.5,
+  });
+  // 도루: 포수가 해당 베이스로 송구
+  if (ev.text.indexOf("도루") !== -1 && gv.fielders[2]) {
+    const m = /(\d)루/.exec(ev.text.split(" : ")[1] || "");
+    const base = m ? BASE_POINTS[Number(m[1])] : BASE_POINTS[2];
+    const catcher = gv.fielders[2];
+    schedule(play, 0.4, function () { catcher.lookAt(base.x, 0, base.z); setPose(catcher, "throw"); });
+    scheduleBall(play, 0.55, [throwSegment(figPoint(catcher), base)]);
+  }
+  play.duration = Math.min(10, play.duration + 0.4);
+  return play.duration;
+}
+
+// 다음 타석 시작: 수비수 원래 자리로, 주자/타자 표시 초기화
+function resetFieldersToHome() {
+  for (const fig of gv.defenseFigures) {
+    const home = fig.userData.home;
+    if (!home) continue;
+    fig.userData.path = null;
+    fig.position.set(home.x, home.y, home.z);
+    fig.lookAt(home.lookX, home.y, home.lookZ);
+    setPose(fig, fig.userData.basePose || "ready");
+  }
+}
+
+// =====================================================================
+// 관중 모드: 자리에서 일어나 관중석을 걸어다니고, 같은 경기를 보는 다른 사람과 만나기
+//
+// 멀티플레이 구조: 내 Netlify 사이트의 /api/room 함수를 거쳐서 주고받음 (서버 경유)
+//   - 사람끼리 직접 연결하지 않음 → 다른 사용자에게 내 IP 주소가 보이지 않음
+//   - 1.2초마다 내 위치(+채팅·이모트)를 보내고, 같은 방 사람들 위치와 새 채팅을 받아옴
+//   - 경기마다 방 하나 (방 = gameId). 15초 동안 소식 없는 사람은 서버가 자동으로 뺌
+//   - 따로 가입·설정할 것 없음
+// =====================================================================
+
+const EYE_STANDING = 1.62;
+const EYE_SITTING = 1.15;
+const WALK_SPEED = 2.2; // m/s
+const RUN_SPEED = 4.2;
+
+const social = {
+  standing: false,
+  nick: "",
+  support: "home", // home | away | neutral
+  keys: {},
+  joy: { x: 0, y: 0 },
+  lastCrowdUpdate: { x: 0, z: 0 },
+  sendTimer: 0,
+  lastSentState: "",
+  floorY: 0,
+  moving: false,
+};
+
+const POLL_INTERVAL_MS = 1200;
+
+const net = {
+  enabled: false,
+  room: null,
+  myId: null,
+  timer: null,
+  joinedAt: 0,
+  chatSince: 0,
+  pendingChat: [], // 아직 안 보낸 채팅
+  lastEmote: null, // { kind, at } — 3초 동안 계속 실어 보내서 다른 사람이 놓치지 않게
+  failCount: 0,
+  users: {}, // id → { name, color, state:{x,y,z,yaw,seated,moving}, fig, bubble, bubbleTimer, lastEmoteAt }
+};
+
+// ---------------------------------------------------------------------
+// 닉네임 / 응원팀
+// ---------------------------------------------------------------------
+function loadNick() {
+  let nick = "";
+  try {
+    nick = localStorage.getItem("yagu-nick") || "";
+  } catch (e) {
+    nick = "";
+  }
+  if (!nick) nick = "관중" + Math.floor(100 + Math.random() * 900);
+  return nick;
+}
+function saveNick(nick) {
+  try {
+    localStorage.setItem("yagu-nick", nick);
+  } catch (e) {
+    // 저장 못 해도 이번 접속에는 그대로 씀
+  }
+}
+function myColor() {
+  if (social.support === "home" && gv.homeTeam) return gv.homeTeam.color;
+  if (social.support === "away" && gv.awayTeam) return gv.awayTeam.color;
+  return "#d8d8d8";
+}
+
+// ---------------------------------------------------------------------
+// 관중석 바닥 높이: 이 위치가 걸을 수 있는 곳이면 바닥 높이, 아니면 null
+// (경기장 안, 전광판 자리, 관중석 뒤 벽 밖은 못 감)
+// ---------------------------------------------------------------------
+function standFloorAt(x, z) {
+  if (!gv.stadium) return null;
+  const p = gv.params;
+  let best = null;
+  let bestD = Infinity;
+  for (const b of gv.stadium.boundary) {
+    const d2 = (b.x - x) ** 2 + (b.z - z) ** 2;
+    if (d2 < bestD) {
+      bestD = d2;
+      best = b;
+    }
+  }
+  if (!best) return null;
+  const rows = rowsAt(best, p);
+  if (rows === 0) return null;
+
+  // 경계선에서 바깥쪽으로 얼마나 들어왔나
+  const d = (x - best.x) * best.nx + (z - best.z) * best.nz;
+  if (d < 0.25) return null; // 경기장 쪽
+
+  let prev = null;
+  for (let r = 0; r < rows; r++) {
+    const g = seatRowGeometry(best, r, p);
+    if (d < g.offset) {
+      // 첫 줄 앞 통로 또는 2층 통로
+      return prev ? prev.height : g.height - ROW_RISE;
+    }
+    if (d < g.offset + ROW_DEPTH) return g.height;
+    prev = g;
+  }
+  // 맨 뒷줄 뒤 1.5m까지는 뒤 통로
+  if (prev && d < prev.offset + ROW_DEPTH + 1.5) return prev.height;
+  return null;
+}
+
+// ---------------------------------------------------------------------
+// 일어나기 / 앉기
+// ---------------------------------------------------------------------
+function toggleStand() {
+  if (social.standing) {
+    social.standing = false;
+    gv.cam.y = social.floorY + EYE_SITTING;
+    $("gv-stand").textContent = "일어나기";
+    $("gv-joystick").style.display = "none";
+  } else {
+    const floor = standFloorAt(gv.cam.x, gv.cam.z);
+    social.floorY = floor !== null ? floor : gv.cam.y - EYE_SITTING;
+    social.standing = true;
+    gv.cam.y = social.floorY + EYE_STANDING;
+    $("gv-stand").textContent = "앉기";
+    $("gv-joystick").style.display = window.matchMedia("(pointer: coarse)").matches ? "block" : "none";
+    showToastText("관중석을 걸어다닐 수 있어요 (PC: WASD / 폰: 왼쪽 아래 조이스틱)");
+  }
+  sendMyState(true);
+}
+
+// 좌석 버튼으로 자리를 옮기면 앉은 상태로
+function onSeatChanged() {
+  social.standing = false;
+  const floor = standFloorAt(gv.cam.x, gv.cam.z);
+  social.floorY = floor !== null ? floor : gv.cam.y - EYE_SITTING;
+  if ($("gv-stand")) $("gv-stand").textContent = "일어나기";
+  if ($("gv-joystick")) $("gv-joystick").style.display = "none";
+  sendMyState(true);
+}
+
+function showToastText(text) {
+  const toast = $("gv-toast");
+  toast.textContent = text;
+  toast.className = "show";
+  clearTimeout(gv.toastTimer);
+  gv.toastTimer = setTimeout(function () { toast.className = ""; }, 2600);
+}
+
+// ---------------------------------------------------------------------
+// 매 프레임: 걷기 + 위치 전송 + 다른 사람 아바타 움직이기
+// ---------------------------------------------------------------------
+function tickSocial(dt) {
+  if (!gv.open || !gv.scene) return;
+
+  if (social.standing) {
+    // 입력: 키보드 + 조이스틱
+    let forward = 0;
+    let strafe = 0;
+    if (social.keys["KeyW"] || social.keys["ArrowUp"]) forward += 1;
+    if (social.keys["KeyS"] || social.keys["ArrowDown"]) forward -= 1;
+    if (social.keys["KeyD"] || social.keys["ArrowRight"]) strafe += 1;
+    if (social.keys["KeyA"] || social.keys["ArrowLeft"]) strafe -= 1;
+    forward += -social.joy.y;
+    strafe += social.joy.x;
+    const len = Math.hypot(forward, strafe);
+    social.moving = len > 0.1;
+
+    if (social.moving) {
+      const speed = social.keys["ShiftLeft"] || len > 1.3 ? RUN_SPEED : WALK_SPEED;
+      const k = (Math.min(1, len) * speed * dt) / len;
+      const yaw = gv.cam.yaw;
+      // 카메라 기준 앞 = (-sin yaw, -cos yaw), 오른쪽 = (cos yaw, -sin yaw)
+      const dx = (-Math.sin(yaw) * forward + Math.cos(yaw) * strafe) * k;
+      const dz = (-Math.cos(yaw) * forward - Math.sin(yaw) * strafe) * k;
+      tryMove(dx, dz);
+    }
+    // 눈높이를 바닥 따라 부드럽게
+    const targetY = social.floorY + EYE_STANDING;
+    gv.cam.y += (targetY - gv.cam.y) * Math.min(1, dt * 10);
+
+    // 1m 넘게 움직이면 주변 관중 다시 숨기기
+    if (Math.hypot(gv.cam.x - social.lastCrowdUpdate.x, gv.cam.z - social.lastCrowdUpdate.z) > 1) {
+      social.lastCrowdUpdate = { x: gv.cam.x, z: gv.cam.z };
+      writeCrowdMatrices(null);
+    }
+  }
+
+  // 위치 전송 (초당 5번, 바뀌었을 때만 + 2초마다 한 번은 무조건)
+  social.sendTimer += dt;
+  if (social.sendTimer > 0.2) {
+    social.sendTimer = 0;
+    sendMyState(false);
+  }
+
+  // 다른 사람 아바타
+  for (const id of Object.keys(net.users)) {
+    const u = net.users[id];
+    if (!u.state) continue;
+    if (!u.fig) createAvatar(u);
+    if (!u.fig) continue;
+    // 받은 위치로 부드럽게
+    const k = Math.min(1, dt * 8);
+    u.fig.position.x += (u.state.x - u.fig.position.x) * k;
+    u.fig.position.y += (u.state.y - u.fig.position.y) * k;
+    u.fig.position.z += (u.state.z - u.fig.position.z) * k;
+    u.fig.rotation.y = u.state.yaw + Math.PI; // 카메라 yaw → 몸이 보는 방향
+    // 내 카메라랑 겹칠 만큼 가까우면 안 보이게 (얼굴 안으로 들어가는 것 방지)
+    const closeToMe = Math.hypot(u.fig.position.x - gv.cam.x, u.fig.position.z - gv.cam.z) < 0.9;
+    u.fig.visible = !closeToMe;
+    const base = u.state.seated ? "sit" : u.state.moving ? "walk" : "idle";
+    u.fig.userData.baseState = base;
+    const st = u.fig.userData.anim.state;
+    if (st !== "cheer" && st !== "wave") setPose(u.fig, base);
+  }
+}
+
+function tryMove(dx, dz) {
+  // 대각선 → 막히면 x만 / z만 시도 (벽을 따라 미끄러지게)
+  const options = [[dx, dz], [dx, 0], [0, dz]];
+  for (const o of options) {
+    const nx = gv.cam.x + o[0];
+    const nz = gv.cam.z + o[1];
+    const floor = standFloorAt(nx, nz);
+    if (floor !== null && Math.abs(floor - social.floorY) < 5) {
+      gv.cam.x = nx;
+      gv.cam.z = nz;
+      social.floorY = floor;
+      return true;
+    }
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------
+// 아바타 (다른 사람)
+// ---------------------------------------------------------------------
+function createAvatar(u) {
+  if (!gv.scene) return;
+  const fig = createPlayerFigure({
+    jerseyColor: u.color || "#d8d8d8",
+    pantsColor: "#3a3f47",
+    capColor: u.color || "#d8d8d8",
+    number: "",
+    name: u.name || "관중",
+  });
+  fig.userData.label.visible = true;
+  fig.userData.label.material.depthTest = true;
+  fig.position.set(u.state.x, u.state.y, u.state.z);
+  gv.scene.add(fig);
+  gv.extraFigures.push(fig);
+  u.fig = fig;
+}
+
+function removeAvatar(u) {
+  if (!u || !u.fig) return;
+  const idx = gv.extraFigures.indexOf(u.fig);
+  if (idx !== -1) gv.extraFigures.splice(idx, 1);
+  if (gv.scene) {
+    gv.scene.remove(u.fig);
+    disposeObject(u.fig);
+  }
+  u.fig = null;
+  u.bubble = null;
+}
+
+// 구장을 다시 만들면(구장 바꾸기) 아바타 모형도 다시 만들어지게
+function forgetAvatarFigures() {
+  for (const id of Object.keys(net.users)) {
+    net.users[id].fig = null;
+    net.users[id].bubble = null;
+  }
+  gv.extraFigures = [];
+}
+
+function showBubble(u, text) {
+  if (!u.fig) return;
+  if (u.bubble) {
+    u.fig.remove(u.bubble);
+    u.bubble.material.map.dispose();
+    u.bubble.material.dispose();
+  }
+  const bubble = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: makeLabelTexture(text, { width: 512, height: 96, background: "rgba(255,255,255,0.92)", color: "#111111", fontSize: 34 }),
+    depthTest: false,
+  }));
+  bubble.scale.set(4.2, 0.8, 1);
+  bubble.position.set(0, 3.0, 0);
+  bubble.renderOrder = 11;
+  u.fig.add(bubble);
+  u.bubble = bubble;
+  clearTimeout(u.bubbleTimer);
+  u.bubbleTimer = setTimeout(function () {
+    if (u.fig && u.bubble) {
+      u.fig.remove(u.bubble);
+      u.bubble = null;
+    }
+  }, 5000);
+}
+
+// ---------------------------------------------------------------------
+// 채팅 / 이모트
+// ---------------------------------------------------------------------
+function addChatLine(name, text, mine) {
+  const feed = $("gv-chat-feed");
+  const line = document.createElement("div");
+  line.className = mine ? "mine" : "";
+  const who = document.createElement("b");
+  who.textContent = name + " ";
+  const msg = document.createElement("span");
+  msg.textContent = text;
+  line.appendChild(who);
+  line.appendChild(msg);
+  feed.appendChild(line);
+  while (feed.childNodes.length > 40) feed.removeChild(feed.firstChild);
+  feed.scrollTop = feed.scrollHeight;
+  $("gv-chat").classList.add("has-new");
+  clearTimeout(social.chatFadeTimer);
+  social.chatFadeTimer = setTimeout(function () { $("gv-chat").classList.remove("has-new"); }, 6000);
+}
+
+function sendChat() {
+  const input = $("gv-chat-input");
+  const text = input.value.trim().slice(0, 80);
+  if (!text) return;
+  input.value = "";
+  addChatLine(social.nick, text, true);
+  if (!net.enabled) return;
+  net.pendingChat.push(text);
+  pollSoon(); // 바로 보내기
+}
+
+function sendEmote(kind) {
+  if (net.enabled) {
+    net.lastEmote = { kind: kind, at: Date.now() };
+    pollSoon();
+  }
+  showToastText(kind === "cheer" ? "🙌 환호!" : "👋 손 흔들기");
+}
+
+// ---------------------------------------------------------------------
+// 내 위치 보내기
+// ---------------------------------------------------------------------
+function myStateRecord() {
+  const eye = social.standing ? EYE_STANDING : EYE_SITTING;
+  return {
+    x: Math.round(gv.cam.x * 100) / 100,
+    y: Math.round((gv.cam.y - eye) * 100) / 100,
+    z: Math.round(gv.cam.z * 100) / 100,
+    yaw: Math.round(gv.cam.yaw * 100) / 100,
+    seated: !social.standing,
+    moving: social.moving && social.standing,
+  };
+}
+
+// 위치는 1.2초마다 서버 요청에 같이 실려 감. force면 바로 한 번 보냄 (자리 이동, 일어나기 등)
+function sendMyState(force) {
+  if (force && net.enabled) pollSoon();
+}
+
+// =====================================================================
+// 서버(/api/room) 주고받기
+// =====================================================================
+function setNetStatus(text) {
+  const count = Object.keys(net.users).length + 1;
+  $("gv-people").textContent = text || "👥 " + count + "명";
+}
+
+// 이 탭만의 임시 id (저장하지 않음)
+function makeSessionId() {
+  return "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function netStart(gameId) {
+  if (net.enabled) return;
+  net.enabled = true;
+  net.room = String(gameId).replace(/[^0-9A-Za-z]/g, "");
+  net.myId = makeSessionId();
+  net.joinedAt = Date.now();
+  net.chatSince = Date.now() - 10 * 60 * 1000; // 들어오기 전 10분 채팅은 목록에만 보여줌
+  net.pendingChat = [];
+  net.failCount = 0;
+  setNetStatus("👥 연결 중…");
+  pollRoom();
+}
+
+function netStop() {
+  if (net.enabled && net.room && net.myId) {
+    // 나간다고 알림 (창 닫힐 때도 전송되도록 sendBeacon)
+    const body = JSON.stringify({ room: net.room, uid: net.myId, leave: true });
+    if (navigator.sendBeacon) navigator.sendBeacon("/api/room", body);
+  }
+  clearTimeout(net.timer);
+  net.timer = null;
+  net.enabled = false;
+  for (const id of Object.keys(net.users)) removeAvatar(net.users[id]);
+  net.users = {};
+}
+
+function pollSoon() {
+  clearTimeout(net.timer);
+  net.timer = setTimeout(pollRoom, 50);
+}
+
+async function pollRoom() {
+  if (!net.enabled) return;
+  clearTimeout(net.timer);
+
+  const emote = net.lastEmote && Date.now() - net.lastEmote.at < 3000 ? net.lastEmote : null;
+  const chat = net.pendingChat.length > 0 ? net.pendingChat.shift() : null;
+  const body = {
+    room: net.room,
+    uid: net.myId,
+    name: social.nick,
+    color: myColor(),
+    state: myStateRecord(),
+    emote: emote,
+    chat: chat,
+    chatSince: net.chatSince,
+  };
+
+  let data = null;
+  try {
+    const res = await fetch("/api/room", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) data = await res.json();
+  } catch (e) {
+    data = null;
+  }
+  if (!net.enabled) return;
+
+  if (!data || !data.ok) {
+    if (chat) net.pendingChat.unshift(chat); // 못 보낸 채팅은 다시
+    net.failCount++;
+    setNetStatus(net.failCount > 2 ? "👥 연결 안 됨" : "👥 연결 중…");
+    if (net.failCount === 3) console.warn("[멀티] /api/room 응답 없음 (room 함수 배포 확인)");
+    net.timer = setTimeout(pollRoom, 3000);
+    return;
+  }
+  net.failCount = 0;
+
+  // 사람들 상태 반영 + 이번 목록에 없는 사람은 나간 것
+  const seen = {};
+  for (const u of data.users || []) {
+    seen[u.uid] = true;
+    onUserData(u.uid, u);
+  }
+  for (const id of Object.keys(net.users)) {
+    if (!seen[id]) onUserGone(id);
+  }
+
+  // 새 채팅
+  for (const c of data.chat || []) {
+    if (Number(c.at) > net.chatSince) net.chatSince = Number(c.at);
+    onChatData(c);
+  }
+  setNetStatus();
+
+  // 다음 요청 (보낼 채팅이 남아 있으면 빨리)
+  net.timer = setTimeout(pollRoom, net.pendingChat.length > 0 ? 200 : POLL_INTERVAL_MS);
+}
+
+function onUserData(id, data) {
+  if (!data || id === net.myId) return;
+  const u = ensureUser(id, data.name, data.color);
+  u.state = sanitizeState(data.state);
+  // 이모트: 새로 들어온 것만 (5초 이내)
+  if (data.emote && data.emote.at && data.emote.at !== u.lastEmoteAt) {
+    const fresh = Date.now() - Number(data.emote.at) < 5000;
+    u.lastEmoteAt = data.emote.at;
+    if (fresh && u.fig) setPose(u.fig, data.emote.kind === "cheer" ? "cheer" : "wave");
+  }
+  setNetStatus();
+}
+
+function onUserGone(id) {
+  const u = net.users[id];
+  if (u) {
+    removeAvatar(u);
+    delete net.users[id];
+  }
+  setNetStatus();
+}
+
+function onChatData(msg) {
+  if (!msg || msg.uid === net.myId) return; // 내 채팅은 보낼 때 이미 표시함
+  const name = String(msg.name || "관중").slice(0, 12);
+  const text = String(msg.text || "").slice(0, 80);
+  addChatLine(name, text, false);
+  // 들어오기 전의 지난 채팅은 말풍선 없이 목록에만
+  if (Number(msg.at) > net.joinedAt - 2000) {
+    const u = net.users[msg.uid];
+    if (u) showBubble(u, text);
+  }
+}
+
+function ensureUser(id, name, color) {
+  let u = net.users[id];
+  if (!u) {
+    u = { name: "관중", color: "#d8d8d8", state: null, fig: null, bubble: null };
+    net.users[id] = u;
+  }
+  const cleanName = String(name || u.name).slice(0, 12);
+  const cleanColor = /^#[0-9a-fA-F]{6}$/.test(String(color)) ? color : u.color;
+  // 이름이나 색이 바뀌면 모형 다시 만들기
+  if (u.fig && (cleanName !== u.name || cleanColor !== u.color)) removeAvatar(u);
+  u.name = cleanName;
+  u.color = cleanColor;
+  return u;
+}
+
+function sanitizeState(s) {
+  if (!s) return null;
+  const num = function (v) {
+    const n = Number(v);
+    return isFinite(n) ? Math.max(-500, Math.min(500, n)) : 0;
+  };
+  return { x: num(s.x), y: num(s.y), z: num(s.z), yaw: num(s.yaw), seated: !!s.seated, moving: !!s.moving };
+}
+
+// ---------------------------------------------------------------------
+// 버튼 / 키보드 / 조이스틱 연결
+// ---------------------------------------------------------------------
+function setupSocialControls() {
+  social.nick = loadNick();
+  $("gv-nick").value = social.nick;
+
+  $("gv-stand").addEventListener("click", toggleStand);
+  $("gv-more").addEventListener("click", function () {
+    const panel = $("gv-cams");
+    panel.classList.toggle("collapsed");
+    $("gv-more").textContent = panel.classList.contains("collapsed") ? "자리·시점 ▾" : "자리·시점 ▴";
+  });
+  $("gv-emote-cheer").addEventListener("click", function () { sendEmote("cheer"); });
+  $("gv-emote-wave").addEventListener("click", function () { sendEmote("wave"); });
+  $("gv-chat-btn").addEventListener("click", function () {
+    $("gv-chat").classList.toggle("open");
+    if ($("gv-chat").classList.contains("open")) $("gv-chat-input").focus();
+  });
+  $("gv-chat-send").addEventListener("click", sendChat);
+  $("gv-chat-input").addEventListener("keydown", function (e) {
+    e.stopPropagation(); // 채팅 칠 때 WASD로 걷지 않게
+    if (e.key === "Enter") sendChat();
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (!gv.open || e.target.tagName === "INPUT") return;
+    social.keys[e.code] = true;
+  });
+  window.addEventListener("keyup", function (e) {
+    social.keys[e.code] = false;
+  });
+
+  // 조이스틱
+  const joy = $("gv-joystick");
+  const knob = $("gv-joy-knob");
+  let joyId = null;
+  let center = null;
+  joy.addEventListener("pointerdown", function (e) {
+    joyId = e.pointerId;
+    joy.setPointerCapture(e.pointerId);
+    const rect = joy.getBoundingClientRect();
+    center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    e.stopPropagation();
+  });
+  joy.addEventListener("pointermove", function (e) {
+    if (e.pointerId !== joyId) return;
+    let dx = e.clientX - center.x;
+    let dy = e.clientY - center.y;
+    const len = Math.hypot(dx, dy);
+    const max = 42;
+    if (len > max) {
+      dx = (dx / len) * max;
+      dy = (dy / len) * max;
+    }
+    knob.style.transform = "translate(" + dx + "px," + dy + "px)";
+    // 끝까지 밀면 뛰기(1.4)
+    social.joy = { x: (dx / max) * (len > max * 1.4 ? 1.4 : 1), y: (dy / max) * (len > max * 1.4 ? 1.4 : 1) };
+  });
+  function release(e) {
+    if (e.pointerId !== joyId) return;
+    joyId = null;
+    knob.style.transform = "translate(0,0)";
+    social.joy = { x: 0, y: 0 };
+  }
+  joy.addEventListener("pointerup", release);
+  joy.addEventListener("pointercancel", release);
+}
+
+// 탭을 닫거나 다른 페이지로 갈 때: 다른 사람들에게 바로 알림
+window.addEventListener("pagehide", function () {
+  if (!net.enabled) return;
+  netStop();
+});
+
+// 좌석 고르기 화면에서 [입장] 누를 때: 닉네임/응원팀 저장 + 방 접속
+function applyEntryChoices() {
+  const nick = $("gv-nick").value.trim().slice(0, 12);
+  if (nick) {
+    social.nick = nick;
+    saveNick(nick);
+  }
+  social.support = $("gv-support").value;
+  if (gv.gameId) netStart(gv.gameId);
 }
 
 
